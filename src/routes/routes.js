@@ -1,10 +1,10 @@
 const express = require('express');
 const userRouter = express.Router();
-const { database, meal_database } = require('../utils/database');
+const { database, meal_database } = require('../database/inmemdb');
 let index = database.users.length;
 const userController = require('../controller/userController');
 // UC-201: Register a new user
-userRouter.post('', userController.CreateUser);
+userRouter.post('', userController.createUser);
 // UC-202: Retrieve all users
 userRouter.get('', userController.getAllUsers);
 // UC-203: Retrieve a user's profile information

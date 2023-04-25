@@ -1,97 +1,199 @@
 const fun = require('../controller/function');
 const assert = require('assert');
-const { database, meal_database } = require('../utils/database');
+const { database, meal_database } = require('../database/inmemdb');
+const dbconnection = require('../database/dbconnection');
 const logger = require('../utils/utils').logger;
 let index = database.users.length;
 
 // userController handles the routes for creating, updating, deleting, and retrieving user data
 const userController = {
-  // CreateUser creates a new user and adds it to the database
-  CreateUser: (req, res) => {
-    // Get the user information from the request body
-    const user = req.body;
-    logger.debug('user = ', user);
-
-    // Validate the user information using assertions
-    try {
-      assert(typeof user.firstname === 'string', 'firstName must be a string');
-      assert(typeof user.lastname === 'string', 'lastName must be a string');
-      assert(typeof user.street === 'string', 'street must be a string');
-      assert(typeof user.city === 'string', 'city must be a string');
-      assert(
-        typeof user.emailaddress === 'string',
-        'emailAddress must be a string'
-      );
-      assert(typeof user.password === 'string', 'password must be a string');
-      assert(
-        typeof user.phonenumber === 'string',
-        'phoneNumber must be a string'
-      );
-
-      if (!fun.validateEmail(user.emailaddress)) {
-        throw new Error('Ongeldig e-mailadres');
-      }
-
-      if (!fun.validatePassword(user.password)) {
-        throw new Error(
-          'Ongeldig wachtwoord. Het wachtwoord moet minstens 8 tekens lang zijn, een hoofdletter, een kleine letter, een cijfer en een speciaal teken bevatten.'
-        );
-      }
-
-      if (!fun.validatePhoneNumber(user.phonenumber)) {
-        throw new Error(
-          'Ongeldig telefoonnummer. Het telefoonnummer moet 10 cijfers lang zijn.'
-        );
-      }
-    } catch (err) {
-      // If any assertion fails, log the error message and return a 400 Bad Request response
-      logger.warn(err.message.toString());
-      res.status(400).json({
-        status: 400,
-        message: err.message.toString(),
-        data: {},
-      });
-      return;
-    }
-    // Check if a user with the same email address already exists
-    const emailExists = database.users.some(
-      (existingUser) => existingUser.emailaddress === user.emailaddress
-    );
-
-    // If the email already exists, return a 400 Bad Request response
-    if (emailExists) {
-      return res.status(400).json({
-        status: 400,
-        message: 'Een gebruiker met dit e-mailadres bestaat al',
-        data: {},
-      });
-    }
-
-    // Assign a new ID to the user and add it to the database
-    user.id = index++;
-    database.users.push(user);
-    logger.info(`New user with ID ${user.id} added to the database.`);
-
-    // Send the response with the user data and a success message
-    res.status(200).json({
-      status: 200,
-      message: `Gebruiker met id ${user.id} is geregistreerd`,
-      data: user,
-    });
-  },
   // getAllUsers retrieves all users from the database
   getAllUsers: (req, res) => {
-    // Log that the function is called to get all users
-    logger.info('Get all users');
-    // Set the response status to 200 OK
-    res.status(200);
-    // Send a single response containing all the user data
-    res.json({
-      status: 200,
-      message: 'server info-endpoint',
-      data: database.users,
+    dbconnection.getConnection(function (err, connection) {
+      if (err) throw err; // not connected!
+
+      // Use the connection
+      connection.query(
+        'SELECT * FROM user;',
+        function (error, results, fields) {
+          // When done with the connection, release it.
+          connection.release();
+
+          // Handle error after the release.
+          if (error) throw error;
+
+          // Don't use the connection here, it has been returned to the pool.
+          console.log('#results= ', results.length);
+
+          res.status(200).json({
+            status: 200,
+            message: 'Alle gebruikers gevonden',
+            data: results,
+          });
+
+          // pool.end((error) => {
+          //   console.log('connection closed');
+          // });
+        }
+      );
     });
   },
+  createUser: (req, res) => {
+    const {
+      firstName,
+      lastName,
+      isActive,
+      emailAdress,
+      password,
+      phoneNumber,
+      roles,
+      street,
+      city,
+    } = req.body;
+
+    if (
+      !firstName ||
+      !lastName ||
+      !emailAdress ||
+      !password ||
+      !street ||
+      !city
+    ) {
+      return res.status(400).json({
+        status: 400,
+        message: 'Vereiste velden ontbreken',
+      });
+    }
+
+    dbconnection.getConnection(function (err, connection) {
+      if (err) throw err; // not connected!
+
+      // Use the connection
+      const sql = `
+        INSERT INTO user (
+          firstName, lastName, isActive, emailAdress, password,
+          phoneNumber, roles, street, city
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `;
+      const values = [
+        firstName,
+        lastName,
+        isActive || 0,
+        emailAdress,
+        password,
+        phoneNumber || '',
+        roles || '',
+        street,
+        city,
+      ];
+
+      connection.query(sql, values, function (error, results, fields) {
+        // When done with the connection, release it.
+        connection.release();
+
+        // Handle error after the release.
+        if (error) {
+          if (error.code === 'ER_DUP_ENTRY') {
+            // Stuur een aangepaste foutmelding naar de gebruiker
+            res.status(409).json({
+              status: 409,
+              message: 'Er bestaat al een gebruiker met dit e-mailadres.',
+              data: {},
+            });
+          } else {
+            // Stuur de oorspronkelijke foutmelding als het een andere fout is
+            throw error;
+          }
+        } else {
+          // Don't use the connection here, it has been returned to the pool.
+          logger.info('#affectedRows= ', results.affectedRows);
+
+          res.status(201).json({
+            status: 201,
+            message: 'Gebruiker succesvol aangemaakt',
+            data: {
+              id: results.insertId,
+              ...req.body,
+            },
+          });
+        }
+      });
+    });
+  },
+
+  // // CreateUser creates a new user and adds it to the database
+  // CreateUser: (req, res) => {
+  //   // Get the user information from the request body
+  //   const user = req.body;
+  //   logger.debug('user = ', user);
+
+  //   // Validate the user information using assertions
+  //   try {
+  //     assert(typeof user.firstname === 'string', 'firstName must be a string');
+  //     assert(typeof user.lastname === 'string', 'lastName must be a string');
+  //     assert(typeof user.street === 'string', 'street must be a string');
+  //     assert(typeof user.city === 'string', 'city must be a string');
+  //     assert(
+  //       typeof user.emailaddress === 'string',
+  //       'emailAddress must be a string'
+  //     );
+  //     assert(typeof user.password === 'string', 'password must be a string');
+  //     assert(
+  //       typeof user.phonenumber === 'string',
+  //       'phoneNumber must be a string'
+  //     );
+
+  //     if (!fun.validateEmail(user.emailaddress)) {
+  //       throw new Error('Ongeldig e-mailadres');
+  //     }
+
+  //     if (!fun.validatePassword(user.password)) {
+  //       throw new Error(
+  //         'Ongeldig wachtwoord. Het wachtwoord moet minstens 8 tekens lang zijn, een hoofdletter, een kleine letter, een cijfer en een speciaal teken bevatten.'
+  //       );
+  //     }
+
+  //     if (!fun.validatePhoneNumber(user.phonenumber)) {
+  //       throw new Error(
+  //         'Ongeldig telefoonnummer. Het telefoonnummer moet 10 cijfers lang zijn.'
+  //       );
+  //     }
+  //   } catch (err) {
+  //     // If any assertion fails, log the error message and return a 400 Bad Request response
+  //     logger.warn(err.message.toString());
+  //     res.status(400).json({
+  //       status: 400,
+  //       message: err.message.toString(),
+  //       data: {},
+  //     });
+  //     return;
+  //   }
+  //   // Check if a user with the same email address already exists
+  //   const emailExists = database.users.some(
+  //     (existingUser) => existingUser.emailaddress === user.emailaddress
+  //   );
+
+  //   // If the email already exists, return a 400 Bad Request response
+  //   if (emailExists) {
+  //     return res.status(400).json({
+  //       status: 400,
+  //       message: 'Een gebruiker met dit e-mailadres bestaat al',
+  //       data: {},
+  //     });
+  //   }
+
+  //   // Assign a new ID to the user and add it to the database
+  //   user.id = index++;
+  //   database.users.push(user);
+  //   logger.info(`New user with ID ${user.id} added to the database.`);
+
+  //   // Send the response with the user data and a success message
+  //   res.status(200).json({
+  //     status: 200,
+  //     message: `Gebruiker met id ${user.id} is geregistreerd`,
+  //     data: user,
+  //   });
+  // },
   // deleteUser deletes a user from the database based on their email and password
   deleteUser: (req, res) => {
     try {
@@ -294,64 +396,100 @@ const userController = {
       });
     }
   },
-  // getUserById retrieves a user's public information and associated meals based on their user ID
   getUserById: (req, res) => {
-    try {
-      // Parse the user ID from the request parameters
-      const userId = parseInt(req.params.id);
-      // Check if the user ID is valid, otherwise throw an erro
-      if (isNaN(userId)) {
-        throw new Error('Ongeldig gebruikers-ID');
-      }
-      // Find the user with the given user ID
-      const user = database.users.find((user) => user.id === userId);
-      // If the user is not found, throw an error
-      if (!user) {
-        throw new Error('Gebruiker niet gevonden');
-      }
+    const { id } = req.params;
 
-      // Find meals where the user is the cook
-      const meals = meal_database.meals.filter(
-        (meal) => meal.cook.id === userId
-      );
-      // Create an object containing the user's public details and associated meals
-      const userDetails = {
-        firstname: user.firstname,
-        lastname: user.lastname,
-        emailaddress: user.emailaddress,
-        phonenumber: user.phonenumber,
-        meals: meals,
-      };
-      // Create a message based on whether the user has any associated meals
-      const message =
-        meals && meals.length > 0
-          ? 'Gebruikersgegevens en maaltijden opgehaald'
-          : 'Gebruikersgegevens opgehaald, maar deze gebruiker heeft geen maaltijden';
-
-      // Log that the user has been successfully fetched
-      logger.info(`User with ID ${user.id} has been successfully fetched.`);
-
-      // Send a success response with the user's details and associated meals
-      res
-        .status(200)
-        .json({ status: 200, message: message, data: userDetails });
-    } catch (err) {
-      // Log the error message
-      logger.warn(err.message.toString());
-
-      // Determine the appropriate status code for the error
-      let statusCode = 400;
-      if (err.message === 'Gebruiker niet gevonden') {
-        statusCode = 404;
-      }
-      // Send an error response with the appropriate status code
-      res.status(statusCode).json({
-        status: statusCode,
-        message: err.message.toString(),
-        data: {},
+    if (!id) {
+      return res.status(400).json({
+        status: 400,
+        message: 'Gebruikers-ID ontbreekt',
       });
     }
+
+    dbconnection.getConnection(function (err, connection) {
+      if (err) throw err;
+
+      const sql = 'SELECT * FROM user WHERE id = ?';
+
+      connection.query(sql, [id], function (error, results, fields) {
+        connection.release();
+
+        if (error) throw error;
+
+        if (results.length === 0) {
+          res.status(404).json({
+            status: 404,
+            message: 'Gebruiker niet gevonden',
+          });
+        } else {
+          res.status(200).json({
+            status: 200,
+            message: 'Gebruiker gevonden',
+            data: results[0],
+          });
+        }
+      });
+    });
   },
+
+  // // getUserById retrieves a user's public information and associated meals based on their user ID
+  // getUserById: (req, res) => {
+  //   try {
+  //     // Parse the user ID from the request parameters
+  //     const userId = parseInt(req.params.id);
+  //     // Check if the user ID is valid, otherwise throw an erro
+  //     if (isNaN(userId)) {
+  //       throw new Error('Ongeldig gebruikers-ID');
+  //     }
+  //     // Find the user with the given user ID
+  //     const user = database.users.find((user) => user.id === userId);
+  //     // If the user is not found, throw an error
+  //     if (!user) {
+  //       throw new Error('Gebruiker niet gevonden');
+  //     }
+
+  //     // Find meals where the user is the cook
+  //     const meals = meal_database.meals.filter(
+  //       (meal) => meal.cook.id === userId
+  //     );
+  //     // Create an object containing the user's public details and associated meals
+  //     const userDetails = {
+  //       firstname: user.firstname,
+  //       lastname: user.lastname,
+  //       emailaddress: user.emailaddress,
+  //       phonenumber: user.phonenumber,
+  //       meals: meals,
+  //     };
+  //     // Create a message based on whether the user has any associated meals
+  //     const message =
+  //       meals && meals.length > 0
+  //         ? 'Gebruikersgegevens en maaltijden opgehaald'
+  //         : 'Gebruikersgegevens opgehaald, maar deze gebruiker heeft geen maaltijden';
+
+  //     // Log that the user has been successfully fetched
+  //     logger.info(`User with ID ${user.id} has been successfully fetched.`);
+
+  //     // Send a success response with the user's details and associated meals
+  //     res
+  //       .status(200)
+  //       .json({ status: 200, message: message, data: userDetails });
+  //   } catch (err) {
+  //     // Log the error message
+  //     logger.warn(err.message.toString());
+
+  //     // Determine the appropriate status code for the error
+  //     let statusCode = 400;
+  //     if (err.message === 'Gebruiker niet gevonden') {
+  //       statusCode = 404;
+  //     }
+  //     // Send an error response with the appropriate status code
+  //     res.status(statusCode).json({
+  //       status: statusCode,
+  //       message: err.message.toString(),
+  //       data: {},
+  //     });
+  //   }
+  // },
   // loginUser logs in a user based on their email address and password
   loginUser: (req, res) => {
     const { emailaddress, password } = req.body;
