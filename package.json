@@ -1,5 +1,34 @@
 {
+  "name": "voorbeeld_les_2",
+  "version": "1.0.0",
+  "description": "express server",
+  "main": "index.js",
+  "scripts": {
+    "dev": "nodemon index.js",
+    "test": "mocha src/test/**/*.test.js --exit",
+    "start": "node index.js"
+  },
+  "author": "ammar",
+  "license": "ISC",
   "dependencies": {
-    "mysql": "^2.18.1"
+    "dotenv": "^16.0.3",
+    "express": "^4.18.2",
+    "jsonwebtoken": "^9.0.0",
+    "mysql": "^2.18.1",
+    "tracer": "^1.1.6",
+    "uuid": "^9.0.0"
+  },
+  "devDependencies": {
+    "chai": "^4.3.7",
+    "chai-http": "^4.3.0",
+    "mocha": "^10.2.0",
+    "nodemon": "^2.0.22",
+    "prettier": "^2.8.7"
+  },
+  "prettier": {
+    "trailingComma": "es5",
+    "tabWidth": 2,
+    "semi": true,
+    "singleQuote": true
   }
 }
