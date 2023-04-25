@@ -2,7 +2,7 @@ const fun = require('../controller/function');
 const assert = require('assert');
 const { database, meal_database } = require('../database/inmemdb');
 const dbconnection = require('../database/dbconnection');
-const logger = require('../utils/utils').logger;
+const logger = require('../test/utils/utils').logger;
 let index = database.users.length;
 
 // userController handles the routes for creating, updating, deleting, and retrieving user data

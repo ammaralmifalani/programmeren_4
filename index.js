@@ -3,7 +3,7 @@ require('dotenv').config();
 const app = express();
 const port = process.env.PORT;
 const userRouter = require('./src/routes/routes');
-const logger = require('./src/utils/utils').logger;
+const logger = require('./src/test/utils/utils').logger;
 
 // Parse JSON requests
 app.use(express.json());

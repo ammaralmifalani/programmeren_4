@@ -2,7 +2,7 @@ const assert = require('assert');
 const chai = require('chai');
 const chaiHttp = require('chai-http');
 const app = require('../../../index');
-const { database, meal_database } = require('../../utils/database');
+const { database, meal_database } = require('../../database/inmemdb');
 let index = database.users.length;
 require('tracer').setLevel('error');
 chai.should();
