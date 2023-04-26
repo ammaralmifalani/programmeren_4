@@ -18,16 +18,15 @@ const userController = {
         function (error, results, fields) {
           // When done with the connection, release it.
           connection.release();
-
           // Handle error after the release.
           if (error) throw error;
 
           // Don't use the connection here, it has been returned to the pool.
-          console.log('#results= ', results.length);
+          logger.info('#results= ', results.length);
 
           res.status(200).json({
             status: 200,
-            message: 'Alle gebruikers gevonden',
+            message: 'server info-endpoint',
             data: results,
           });
 
@@ -39,7 +38,7 @@ const userController = {
     });
   },
   createUser: (req, res) => {
-    const {
+    const newUser = ({
       firstName,
       lastName,
       isActive,
@@ -49,22 +48,97 @@ const userController = {
       roles,
       street,
       city,
-    } = req.body;
+    } = req.body);
+
+    // Validatie van e-mailadres
+
+    if (!fun.validateEmail(newUser.emailAdress)) {
+      return res.status(400).json({
+        status: 400,
+        message: 'Ongeldig e-mailadres',
+        data: {},
+      });
+    }
+
+    // Validatie van telefoonnummer
+    if (newUser.phoneNumber) {
+      if (!fun.validatePhoneNumber(newUser.phoneNumber)) {
+        return res.status(400).json({
+          status: 400,
+          message:
+            'Ongeldig telefoonnummer. Het telefoonnummer moet 10 cijfers lang zijn.',
+          data: {},
+        });
+      }
+    }
+
+    // Validatie van wachtwoord
+
+    if (!fun.validatePassword(newUser.password)) {
+      return res.status(400).json({
+        status: 400,
+        message:
+          'Ongeldig wachtwoord. Het wachtwoord moet minstens 8 tekens lang zijn, een hoofdletter, een kleine letter, een cijfer en een speciaal teken bevatten.',
+        data: {},
+      });
+    }
 
     if (
-      !firstName ||
-      !lastName ||
-      !emailAdress ||
-      !password ||
-      !street ||
-      !city
+      !newUser.firstName ||
+      !newUser.lastName ||
+      !newUser.emailAdress ||
+      !newUser.password ||
+      !newUser.street ||
+      !newUser.city
     ) {
       return res.status(400).json({
         status: 400,
         message: 'Vereiste velden ontbreken',
+        data: {},
       });
     }
+    // Valideer de types van de velden
+    const fieldTypes = {
+      firstName: 'string',
+      lastName: 'string',
+      isActive: 'number',
+      emailAdress: 'string',
+      password: 'string',
+      phoneNumber: 'string',
+      roles: 'string',
+      street: 'string',
+      city: 'string',
+    };
 
+    for (const field in fieldTypes) {
+      const expectedType = fieldTypes[field];
+      const actualType = typeof newUser[field];
+
+      if (actualType !== expectedType) {
+        return res.status(400).json({
+          status: 400,
+          message: `Ongeldig veldtype: ${field} moet van het type ${expectedType} zijn, maar het is van het type ${actualType}.`,
+          data: {},
+        });
+      }
+    }
+    // if (
+    //   typeof newUser.firstName !== 'string' ||
+    //   typeof newUser.lastName !== 'string' ||
+    //   typeof newUser.isActive !== 'boolean' ||
+    //   typeof newUser.emailAdress !== 'string' ||
+    //   typeof newUser.password !== 'string' ||
+    //   typeof newUser.phoneNumber !== 'string' ||
+    //   typeof newUser.roles !== 'string' ||
+    //   typeof newUser.street !== 'string' ||
+    //   typeof newUser.city !== 'string'
+    // ) {
+    //   return res.status(400).json({
+    //     status: 400,
+    //     message: 'Ongeldige veldtypen',
+    //     data: {},
+    //   });
+    // }
     dbconnection.getConnection(function (err, connection) {
       if (err) throw err; // not connected!
 
@@ -76,15 +150,15 @@ const userController = {
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
       `;
       const values = [
-        firstName,
-        lastName,
-        isActive || 0,
-        emailAdress,
-        password,
-        phoneNumber || '',
-        roles || '',
-        street,
-        city,
+        newUser.firstName,
+        newUser.lastName,
+        newUser.isActive || 0,
+        newUser.emailAdress,
+        newUser.password,
+        newUser.phoneNumber || '',
+        newUser.roles || '',
+        newUser.street,
+        newUser.city,
       ];
 
       connection.query(sql, values, function (error, results, fields) {
@@ -101,18 +175,18 @@ const userController = {
               data: {},
             });
           } else {
-            // Stuur de oorspronkelijke foutmelding als het een andere fout is
+            // Stuur de oorspronkelijke foutmelding als het een andere fout is been returned to the pool.
+            logger.info('#affectedRows= ', results.affectedRows);
             throw error;
           }
         } else {
-          // Don't use the connection here, it has been returned to the pool.
-          logger.info('#affectedRows= ', results.affectedRows);
-
+          // Don't use the connection here, it has
+          let user_id = results.insertId;
           res.status(201).json({
             status: 201,
-            message: 'Gebruiker succesvol aangemaakt',
+            message: `Gebruiker met e-mailadres ${newUser.emailAdress} is geregistreerd`,
             data: {
-              id: results.insertId,
+              id: user_id,
               ...req.body,
             },
           });
@@ -337,150 +411,118 @@ const userController = {
   },
   // getUserProfile retrieves a user's profile information based on their email and password
   getUserProfile: (req, res) => {
-    try {
-      const { emailaddress, password } = req.body;
-      console.log(req.body);
-      // Check if emailaddress and password are strings, otherwise throw an error    // Check if emailaddress and password are strings, otherwise throw an error
-      assert(typeof emailaddress === 'string', 'emailAddress must be a string');
-      assert(typeof password === 'string', 'password must be a string');
-      // Find the index of the user with the given email address
-      const userIndex = database.users.findIndex(
-        (user) => user.emailaddress === emailaddress
-      );
-      // If the user is not found, throw an error
-      if (userIndex === -1) {
-        throw new Error('Gebruiker niet gevonden');
-      }
+    const { emailAdress, password } = req.body;
 
-      const user = database.users[userIndex];
-      // If the given password does not match the user's password, throw an error
-      if (user.password !== password) {
-        throw new Error('Ongeldig wachtwoord');
-      }
-      // Create an object containing the user's profile details
-      const userDetails = {
-        firstname: user.firstname,
-        lastname: user.lastname,
-        emailaddress: user.emailaddress,
-        password: user.password,
-        street: user.street,
-        city: user.city,
-        phonenumber: user.phonenumber,
-        meals: user.meals,
-      };
-      // Log that the user's profile has been successfully fetched
-      logger.info(
-        `User with email ${user.emailaddress} has been successfully fetched.`
-      );
-      // Send a success response with the user's profile details
-      res.status(200).json({
-        status: 200,
-        message: 'Profielgegevens opgehaald',
-        data: userDetails,
-      });
-    } catch (err) {
-      // Log the error message
-      logger.warn(err.message.toString());
-      // Determine the appropriate status code for the error
-      let statusCode = 400;
-      if (err.message === 'Gebruiker niet gevonden') {
-        statusCode = 404;
-      } else if (err.message === 'Ongeldig wachtwoord') {
-        statusCode = 401;
-      }
-      // Send an error response with the appropriate status code
-      res.status(statusCode).json({
-        status: statusCode,
-        message: err.message.toString(),
-        data: {},
-      });
-    }
-  },
-  getUserById: (req, res) => {
-    const { id } = req.params;
-
-    if (!id) {
-      return res.status(400).json({
-        status: 400,
-        message: 'Gebruikers-ID ontbreekt',
-      });
-    }
+    // if (typeof emailAdress !== 'string' || typeof password !== 'string') {
+    //   return res.status(400).json({
+    //     status: 400,
+    //     message: 'E-mailadres en wachtwoord moeten een tekenreeks zijn',
+    //     data: {},
+    //   });
+    // }
 
     dbconnection.getConnection(function (err, connection) {
       if (err) throw err;
 
-      const sql = 'SELECT * FROM user WHERE id = ?';
+      const userSql = 'SELECT * FROM user WHERE emailAdress = ?';
 
-      connection.query(sql, [id], function (error, results, fields) {
-        connection.release();
+      connection.query(
+        userSql,
+        [emailAdress],
+        function (error, userResults, fields) {
+          connection.release();
+          if (error) throw error;
 
-        if (error) throw error;
+          if (userResults.length === 0) {
+            res.status(404).json({
+              status: 404,
+              message: 'Gebruiker niet gevonden',
+              data: {},
+            });
+          } else {
+            const user = userResults[0];
 
-        if (results.length === 0) {
-          res.status(404).json({
-            status: 404,
-            message: 'Gebruiker niet gevonden',
-          });
-        } else {
-          res.status(200).json({
-            status: 200,
-            message: 'Gebruiker gevonden',
-            data: results[0],
-          });
+            if (user.password !== password) {
+              res.status(401).json({
+                status: 401,
+                message: 'Ongeldig wachtwoord',
+                data: {},
+              });
+            } else {
+              const userDetails = {
+                firstName: user.firstName,
+                lastName: user.lastName,
+                emailAdress: user.emailAdress,
+                password: user.password,
+                street: user.street,
+                city: user.city,
+                phonenumber: user.phonenumber,
+                meals: user.meals,
+              };
+
+              res.status(200).json({
+                status: 200,
+                message: 'Profielgegevens opgehaald',
+                data: userDetails,
+              });
+            }
+          }
         }
-      });
+      );
     });
   },
 
-  // // getUserById retrieves a user's public information and associated meals based on their user ID
-  // getUserById: (req, res) => {
+  // getUserProfile: (req, res) => {
   //   try {
-  //     // Parse the user ID from the request parameters
-  //     const userId = parseInt(req.params.id);
-  //     // Check if the user ID is valid, otherwise throw an erro
-  //     if (isNaN(userId)) {
-  //       throw new Error('Ongeldig gebruikers-ID');
-  //     }
-  //     // Find the user with the given user ID
-  //     const user = database.users.find((user) => user.id === userId);
+  //     const { emailaddress, password } = req.body;
+  //     console.log(req.body);
+  //     // Check if emailaddress and password are strings, otherwise throw an error    // Check if emailaddress and password are strings, otherwise throw an error
+  //     assert(typeof emailaddress === 'string', 'emailAddress must be a string');
+  //     assert(typeof password === 'string', 'password must be a string');
+  //     // Find the index of the user with the given email address
+  //     const userIndex = database.users.findIndex(
+  //       (user) => user.emailaddress === emailaddress
+  //     );
   //     // If the user is not found, throw an error
-  //     if (!user) {
+  //     if (userIndex === -1) {
   //       throw new Error('Gebruiker niet gevonden');
   //     }
 
-  //     // Find meals where the user is the cook
-  //     const meals = meal_database.meals.filter(
-  //       (meal) => meal.cook.id === userId
-  //     );
-  //     // Create an object containing the user's public details and associated meals
+  //     const user = database.users[userIndex];
+  //     // If the given password does not match the user's password, throw an error
+  //     if (user.password !== password) {
+  //       throw new Error('Ongeldig wachtwoord');
+  //     }
+  //     // Create an object containing the user's profile details
   //     const userDetails = {
   //       firstname: user.firstname,
   //       lastname: user.lastname,
   //       emailaddress: user.emailaddress,
+  //       password: user.password,
+  //       street: user.street,
+  //       city: user.city,
   //       phonenumber: user.phonenumber,
-  //       meals: meals,
+  //       meals: user.meals,
   //     };
-  //     // Create a message based on whether the user has any associated meals
-  //     const message =
-  //       meals && meals.length > 0
-  //         ? 'Gebruikersgegevens en maaltijden opgehaald'
-  //         : 'Gebruikersgegevens opgehaald, maar deze gebruiker heeft geen maaltijden';
-
-  //     // Log that the user has been successfully fetched
-  //     logger.info(`User with ID ${user.id} has been successfully fetched.`);
-
-  //     // Send a success response with the user's details and associated meals
-  //     res
-  //       .status(200)
-  //       .json({ status: 200, message: message, data: userDetails });
+  //     // Log that the user's profile has been successfully fetched
+  //     logger.info(
+  //       `User with email ${user.emailaddress} has been successfully fetched.`
+  //     );
+  //     // Send a success response with the user's profile details
+  //     res.status(200).json({
+  //       status: 200,
+  //       message: 'Profielgegevens opgehaald',
+  //       data: userDetails,
+  //     });
   //   } catch (err) {
   //     // Log the error message
   //     logger.warn(err.message.toString());
-
   //     // Determine the appropriate status code for the error
   //     let statusCode = 400;
   //     if (err.message === 'Gebruiker niet gevonden') {
   //       statusCode = 404;
+  //     } else if (err.message === 'Ongeldig wachtwoord') {
+  //       statusCode = 401;
   //     }
   //     // Send an error response with the appropriate status code
   //     res.status(statusCode).json({
@@ -490,6 +532,98 @@ const userController = {
   //     });
   //   }
   // },
+  // getUserById retrieves a user's public information and associated meals based on their user ID
+  getUserById: (req, res) => {
+    const { id } = req.params;
+
+    if (isNaN(id)) {
+      return res.status(400).json({
+        status: 400,
+        message: 'Ongeldige gebruikers-ID',
+        data: {},
+      });
+    }
+
+    dbconnection.getConnection(function (err, connection) {
+      if (err) throw err;
+
+      const userSql =
+        'SELECT firstName, lastName, emailAdress, phoneNumber FROM user WHERE id = ?';
+      const mealSql = 'SELECT * FROM meal WHERE CookID = ?';
+
+      connection.query(userSql, [id], function (error, userResults, fields) {
+        if (error) throw error;
+
+        if (userResults.length === 0) {
+          connection.release();
+          res.status(404).json({
+            status: 404,
+            message: 'Gebruiker niet gevonden',
+            data: {},
+          });
+        } else {
+          connection.query(
+            mealSql,
+            [id],
+            function (error, mealResults, fields) {
+              connection.release();
+
+              if (error) throw error;
+
+              const meals = mealResults.map((result) => {
+                return {
+                  id: result.id,
+                  name: result.name,
+                  description: result.description,
+                  dateTime: result.dateTime,
+                  maxAmountOfParticipants: result.maxAmountOfParticipants,
+                  price: result.price,
+                  imageUrl: result.imageUrl,
+                  cookId: result.cookId,
+                  createDate: result.createDate,
+                  updateDate: result.updateDate,
+                  allergenes: result.allergenes,
+                  isVega: result.isVega,
+                  isVegan: result.isVegan,
+                  isToTakeHome: result.isToTakeHome,
+                };
+              });
+
+              const userData = { ...userResults[0], meals };
+
+              res.status(200).json({
+                status: 200,
+                message: 'Gebruiker gevonden',
+                data: userData,
+              });
+            }
+          );
+        }
+      });
+    });
+  },
+  // getTableLength retrieves the length of a table from the database
+  getTableLength: (tableName, callback) => {
+    dbconnection.getConnection((err, connection) => {
+      if (err) throw err; // not connected!
+
+      // Use the connection
+      connection.query(
+        `SELECT COUNT(*) as count FROM ${tableName}`,
+        (error, results, fields) => {
+          // When done with the connection, release it.
+          connection.release();
+          // Handle error after the release.
+          if (error) throw error;
+
+          // Don't use the connection here, it has been returned to the pool.
+          const tableLength = results[0].count;
+
+          callback(null, tableLength);
+        }
+      );
+    });
+  },
   // loginUser logs in a user based on their email address and password
   loginUser: (req, res) => {
     const { emailaddress, password } = req.body;

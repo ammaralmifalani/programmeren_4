@@ -2,23 +2,28 @@ const assert = require('assert');
 const chai = require('chai');
 const chaiHttp = require('chai-http');
 const app = require('../../../index');
-const { database, meal_database } = require('../../database/inmemdb');
-let index = database.users.length;
+// const { database, meal_database } = require('../../database/inmemdb');
+const database = require('../../database/dbconnection');
+const { getTableLength } = require('../../controller/userController');
+const userController = require('../../controller/userController');
+// let index = database.users.length;
 require('tracer').setLevel('error');
 chai.should();
 chai.use(chaiHttp);
+const logger = require('../utils/utils').logger;
 // Test case UC-201.
 describe('Register User', function () {
   it('TC-201-1 should register a new user successfully', (done) => {
     const newUser = {
-      id: index++,
-      firstname: 'John',
-      lastname: 'Doe',
-      street: 'Main Street',
-      city: 'Amsterdam',
-      emailaddress: 'john.doe@example.com',
+      firstName: 'John',
+      lastName: 'Doe',
+      isActive: 1,
+      emailAdress: 'john.doeNewVersionabcde@example.com', // Ongeldig e-mailadres
       password: 'Abcde@123',
-      phonenumber: '0612345678',
+      phoneNumber: '0612345678',
+      roles: '',
+      street: 'Main Street 123',
+      city: 'Amsterdam',
     };
     chai
       .request(app)
@@ -27,38 +32,40 @@ describe('Register User', function () {
       .end((err, res) => {
         assert(err === null);
         res.body.should.be.an('object');
-        res.body.should.have.property('status').to.be.equal(200);
+        res.body.should.have.property('status').to.be.equal(201);
         res.body.should.have.property('message').to.be.a('string');
         res.body.should.have.property('data').to.be.an('object');
 
         let { data, message, status } = res.body;
 
         message.should.be.equal(
-          `Gebruiker met id ${newUser.id} is geregistreerd`
+          `Gebruiker met e-mailadres ${newUser.emailAdress} is geregistreerd`
         );
 
-        data.should.have.property('firstname').to.be.equal('John');
-        data.should.have.property('lastname').to.be.equal('Doe');
-        data.should.have.property('street').to.be.equal('Main Street');
+        data.should.have.property('firstName').to.be.equal('John');
+        data.should.have.property('lastName').to.be.equal('Doe');
+        data.should.have.property('street').to.be.equal('Main Street 123');
         data.should.have.property('city').to.be.equal('Amsterdam');
         data.should.have
-          .property('emailaddress')
-          .to.be.equal('john.doe@example.com');
+          .property('emailAdress')
+          .to.be.equal('john.doeNewVersionabcd@example.com');
         data.should.have.property('password').to.be.equal('Abcde@123');
-        data.should.have.property('phonenumber').to.be.equal('0612345678');
+        data.should.have.property('phoneNumber').to.be.equal('0612345678');
         done();
       });
   });
 
   it('TC-201-2 should return an error if email address is invalid', (done) => {
     const newUser = {
-      firstname: 'John',
-      lastname: 'Doe',
-      street: 'Main Street',
-      city: 'Amsterdam',
-      emailaddress: 'john.doe@.example', // Ongeldig e-mailadres
+      firstName: 'John',
+      lastName: 'Doe',
+      isActive: 1,
+      emailAdress: 'john.doe@.example', // Ongeldig e-mailadres
       password: 'Abcde@123',
-      phonenumber: '0612345678',
+      phoneNumber: '0612345678',
+      roles: '',
+      street: 'Main Street 123',
+      city: 'Amsterdam',
     };
     chai
       .request(app)
@@ -77,13 +84,15 @@ describe('Register User', function () {
 
   it('TC-201-3 should return an error if phonenumber is invalid', (done) => {
     const newUser = {
-      firstname: 'John',
-      lastname: 'Doe',
-      street: 'Main Street',
-      city: 'Amsterdam',
-      emailaddress: 'john.doe@example.com',
+      firstName: 'John',
+      lastName: 'Doe',
+      isActive: 1,
+      emailAdress: 'john.doeNewVersion@example.com',
       password: 'Abcde@123',
-      phonenumber: '612345678', // Ongeldig telefoonnummer
+      phoneNumber: '612345678',
+      roles: '',
+      street: 'Main Street 123',
+      city: 'Amsterdam',
     };
     chai
       .request(app)
@@ -104,13 +113,15 @@ describe('Register User', function () {
 
   it('TC-201-4 should return an error if password is invalid', (done) => {
     const newUser = {
-      firstname: 'John',
-      lastname: 'Doe',
-      street: 'Main Street',
+      firstName: 'John',
+      lastName: 'Doe',
+      isActive: 1,
+      emailAdress: 'john.doeNewVersion@example.com',
+      password: 'abcdefg',
+      phoneNumber: '0987654321',
+      roles: '',
+      street: 'Main Street 123',
       city: 'Amsterdam',
-      emailaddress: 'john.doe@example.com',
-      password: 'abcdefg', // Ongeldig wachtwoord
-      phonenumber: '0612345678',
     };
     chai
       .request(app)
@@ -127,83 +138,161 @@ describe('Register User', function () {
 
         done();
       });
-    it('TC-201-5 should return an error if any field is empty', (done) => {
-      const newUser = {
-        firstname: 'John',
-        lastname: '',
-        street: 'Main Street',
-        city: 'Amsterdam',
-        emailaddress: 'john.doe@example.com',
-        password: 'Abcde@123',
-        phonenumber: '0612345678',
-      };
-      chai
-        .request(app)
-        .post('/api/user')
-        .send(newUser)
-        .end((err, res) => {
-          res.body.should.be.an('object');
-          res.body.should.have.property('status').to.be.equal(400);
-          let { data, message, status } = res.body;
-          message.should.be.equal('lastName must be a string');
-          Object.keys(data).length.should.be.equal(0);
+  });
 
-          done();
-        });
-    });
+  it('TC-201-5 should return an error if any field is empty', (done) => {
+    const newUser = {
+      firstName: 'John',
+      lastName: '',
+      isActive: 1,
+      emailAdress: 'john.doeNewVersionabcde@example.com', // Ongeldig e-mailadres
+      password: 'Abcde@123',
+      phoneNumber: '0612345678',
+      roles: '',
+      street: 'Main Street 123',
+      city: 'Amsterdam',
+    };
+    chai
+      .request(app)
+      .post('/api/user')
+      .send(newUser)
+      .end((err, res) => {
+        res.body.should.be.an('object');
+        res.body.should.have.property('status').to.be.equal(400);
+        let { data, message, status } = res.body;
+        message.should.be.equal('Vereiste velden ontbreken');
+        Object.keys(data).length.should.be.equal(0);
 
-    it('TC-201-6 should return an error if any field is missing', (done) => {
-      const newUser = {
-        firstname: 'John',
-        // lastname ontbreekt
-        street: 'Main Street',
-        city: 'Amsterdam',
-        emailaddress: 'john.doe@example.com',
-        password: 'Abcde@123',
-        phonenumber: '0612345678',
-      };
-      chai
-        .request(app)
-        .post('/api/user')
-        .send(newUser)
-        .end((err, res) => {
-          res.body.should.be.an('object');
-          res.body.should.have.property('status').to.be.equal(400);
-          let { data, message, status } = res.body;
-          message.should.be.equal('lastName must be a string');
-          Object.keys(data).length.should.be.equal(0);
+        done();
+      });
+  });
 
-          done();
-        });
-    });
+  it('TC-201-6 should return an error if any field is missing', (done) => {
+    const newUser = {
+      firstName: 'John',
+      // lastName: '',
+      isActive: 1,
+      emailAdress: 'john.doeNewVersionabcde@example.com', // Ongeldig e-mailadres
+      password: 'Abcde@123',
+      phoneNumber: '0612345678',
+      roles: '',
+      street: 'Main Street 123',
+      city: 'Amsterdam',
+    };
+    chai
+      .request(app)
+      .post('/api/user')
+      .send(newUser)
+      .end((err, res) => {
+        res.body.should.be.an('object');
+        res.body.should.have.property('status').to.be.equal(400);
+        let { data, message, status } = res.body;
+        message.should.be.equal('Vereiste velden ontbreken');
+        Object.keys(data).length.should.be.equal(0);
 
-    it('TC-201-7 should return an error if any field type is incorrect', (done) => {
-      const newUser = {
-        firstname: 'John',
-        lastname: 'Doe',
-        street: 'Main Street',
-        city: 'Amsterdam',
-        emailaddress: 'john.doe@example.com',
-        password: 'Abcde@123',
-        phonenumber: 612345678, // Telefoonnummer als getal i.p.v. string
-      };
-      chai
-        .request(app)
-        .post('/api/user')
-        .send(newUser)
-        .end((err, res) => {
-          res.body.should.be.an('object');
-          res.body.should.have.property('status').to.be.equal(400);
-          let { data, message, status } = res.body;
-          message.should.be.equal('phoneNumber must be a string');
-          Object.keys(data).length.should.be.equal(0);
+        done();
+      });
+  });
 
-          done();
-        });
-    });
+  it('TC-201-7 should return an error if any field type is incorrect', (done) => {
+    const newUser = {
+      firstName: 'John',
+      lastName: 1,
+      isActive: 1,
+      emailAdress: 'john.doeNewVersionabcdehr@example.com', // Ongeldig e-mailadres
+      password: 'Abcde@123',
+      phoneNumber: '0612345678',
+      roles: '',
+      street: 'Main Street 123',
+      city: 'Amsterdam',
+    };
+    chai
+      .request(app)
+      .post('/api/user')
+      .send(newUser)
+      .end((err, res) => {
+        res.body.should.be.an('object');
+        res.body.should.have.property('status').to.be.equal(400);
+        let { data, message, status } = res.body;
+        message.should.be.equal(
+          'Ongeldig veldtype: lastName moet van het type string zijn, maar het is van het type number.'
+        );
+        Object.keys(data).length.should.be.equal(0);
+
+        done();
+      });
+  });
+
+  it('TC-201-8 should register a new user successfully with an empty phoneNumber', (done) => {
+    const newUser = {
+      firstName: 'John',
+      lastName: 'Doe',
+      isActive: 1,
+      emailAdress: 'john.doeNewVersionabcdehrsgh@example.com', // Ongeldig e-mailadres
+      password: 'Abcde@123',
+      phoneNumber: '',
+      roles: '',
+      street: 'Main Street 123',
+      city: 'Amsterdam',
+    };
+    chai
+      .request(app)
+      .post('/api/user')
+      .send(newUser)
+      .end((err, res) => {
+        assert(err === null);
+        res.body.should.be.an('object');
+        res.body.should.have.property('status').to.be.equal(201);
+        res.body.should.have.property('message').to.be.a('string');
+        res.body.should.have.property('data').to.be.an('object');
+
+        let { data, message, status } = res.body;
+
+        message.should.be.equal(
+          `Gebruiker met e-mailadres ${newUser.emailAdress} is geregistreerd`
+        );
+
+        data.should.have.property('firstName').to.be.equal('John');
+        data.should.have.property('lastName').to.be.equal('Doe');
+        data.should.have.property('street').to.be.equal('Main Street 123');
+        data.should.have.property('city').to.be.equal('Amsterdam');
+        data.should.have
+          .property('emailAdress')
+          .to.be.equal('john.doeNewVersionabcdehrsgh@example.com');
+        data.should.have.property('password').to.be.equal('Abcde@123');
+        data.should.have.property('phoneNumber').to.be.equal(''); // Check if phoneNumber is an empty string
+        done();
+      });
   });
 });
 // Test case UC-202
+// describe('Get All Users', function () {
+//   it('TC-202-1 should return all users in the database', (done) => {
+//     chai
+//       .request(app)
+//       .get('/api/user')
+//       .end((err, res) => {
+//         expect(err).to.be.null;
+
+//         // Get the expected length of the user table
+//         getTableLength('user', (tableErr, tableLength) => {
+//           if (tableErr) {
+//             logger.error(tableErr);
+//           }
+
+//           res.body.should.be.an('object');
+//           res.body.should.have.property('status').to.be.equal(200);
+//           res.body.should.have.property('message');
+//           res.body.should.have.property('data');
+//           let { data, message, status } = res.body;
+//           data.should.be.an('array');
+//           message.should.be.equal('server info-endpoint');
+//           data.length.should.be.equal(tableLength);
+//           done();
+//         });
+//       });
+//   });
+// });
 describe('Get All Users', function () {
   it('TC-202-1 should return all users in the database', (done) => {
     chai
@@ -211,15 +300,22 @@ describe('Get All Users', function () {
       .get('/api/user')
       .end((err, res) => {
         assert(err === null);
-        res.body.should.be.an('object');
-        res.body.should.have.property('status').to.be.equal(200);
-        res.body.should.have.property('message');
-        res.body.should.have.property('data');
-        let { data, message, status } = res.body;
-        data.should.be.an('array');
-        message.should.be.equal('server info-endpoint');
-        data.length.should.be.equal(database.users.length);
-        done();
+
+        // Get the expected length of the user table
+        getTableLength('user', (tableErr, tableLength) => {
+          if (tableErr) {
+            logger.error(tableErr);
+          }
+          res.body.should.be.an('object');
+          res.body.should.have.property('status').to.be.equal(200);
+          res.body.should.have.property('message');
+          res.body.should.have.property('data');
+          let { data, message, status } = res.body;
+          data.should.be.an('array');
+          message.should.be.equal('server info-endpoint');
+          data.length.should.be.equal(tableLength);
+          done();
+        });
       });
   });
 });
@@ -290,7 +386,7 @@ describe('Get User Profile', function () {
 // Test case UC-204
 describe('Get User by ID', function () {
   it('UC-204-1 should return user details and meals', (done) => {
-    const userId = 0; // Change this to the appropriate user ID in the database
+    const userId = 1; // Change this to the appropriate user ID in the database
     chai
       .request(app)
       .get(`/api/user/${userId}`)
@@ -301,11 +397,11 @@ describe('Get User by ID', function () {
         res.body.should.have.property('message');
         res.body.should.have.property('data');
         let { data, message, status } = res.body;
-        message.should.be.equal('Gebruikersgegevens en maaltijden opgehaald');
-        data.should.have.property('firstname');
-        data.should.have.property('lastname');
-        data.should.have.property('emailaddress');
-        data.should.have.property('phonenumber');
+        message.should.be.equal('Gebruiker gevonden');
+        data.should.have.property('firstName');
+        data.should.have.property('lastName');
+        data.should.have.property('emailAdress');
+        data.should.have.property('phoneNumber');
         data.should.have.property('meals');
         done();
       });
@@ -320,7 +416,7 @@ describe('Get User by ID', function () {
         res.body.should.be.an('object');
         res.body.should.have.property('status').to.be.equal(400);
         let { data, message, status } = res.body;
-        message.should.be.equal('Ongeldig gebruikers-ID');
+        message.should.be.equal('Ongeldige gebruikers-ID');
         Object.keys(data).length.should.be.equal(0);
 
         done();
@@ -328,7 +424,7 @@ describe('Get User by ID', function () {
   });
 
   it('UC-204-3 should return error for user not found', (done) => {
-    const userId = 9999999999; // Change this to a non-existent user ID
+    const userId = 9999999;
     chai
       .request(app)
       .get(`/api/user/${userId}`)
