@@ -413,13 +413,13 @@ const userController = {
   getUserProfile: (req, res) => {
     const { emailAdress, password } = req.body;
 
-    // if (typeof emailAdress !== 'string' || typeof password !== 'string') {
-    //   return res.status(400).json({
-    //     status: 400,
-    //     message: 'E-mailadres en wachtwoord moeten een tekenreeks zijn',
-    //     data: {},
-    //   });
-    // }
+    if (typeof emailAdress !== 'string' || typeof password !== 'string') {
+      return res.status(400).json({
+        status: 400,
+        message: 'E-mailadres en wachtwoord moeten een tekenreeks zijn',
+        data: {},
+      });
+    }
 
     dbconnection.getConnection(function (err, connection) {
       if (err) throw err;
@@ -457,7 +457,6 @@ const userController = {
                 street: user.street,
                 city: user.city,
                 phonenumber: user.phonenumber,
-                meals: user.meals,
               };
 
               res.status(200).json({

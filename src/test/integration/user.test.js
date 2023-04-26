@@ -18,7 +18,7 @@ describe('Register User', function () {
       firstName: 'John',
       lastName: 'Doe',
       isActive: 1,
-      emailAdress: 'john.doeNewVersionabcde@example.com', // Ongeldig e-mailadres
+      emailAdress: 'john.doeNewVersionabcder@example.com', // Ongeldig e-mailadres
       password: 'Abcde@123',
       phoneNumber: '0612345678',
       roles: '',
@@ -228,7 +228,7 @@ describe('Register User', function () {
       firstName: 'John',
       lastName: 'Doe',
       isActive: 1,
-      emailAdress: 'john.doeNewVersionabcdehrsgh@example.com', // Ongeldig e-mailadres
+      emailAdress: 'john.doeNewVersionabcdehrsghrr@example.com', // Ongeldig e-mailadres
       password: 'Abcde@123',
       phoneNumber: '',
       roles: '',
@@ -321,10 +321,10 @@ describe('Get All Users', function () {
 });
 // Test case UC-203
 describe('Get User Profile', function () {
-  it('TC-203-2 should return user profile data', (done) => {
+  it('TC-203-1 should return user profile data', (done) => {
     const credentials = {
-      emailaddress: 'ammar@gmail.com',
-      password: 'P@ssw0rd!',
+      emailAdress: 'john.doeNewVersion@example.com',
+      password: 'Abcde@123',
     };
     chai
       .request(app)
@@ -337,17 +337,29 @@ describe('Get User Profile', function () {
         res.body.should.have.property('message');
         res.body.should.have.property('data');
         let { data, message, status } = res.body;
+        const user = {
+          firstName: 'John',
+          lastName: 'Doe',
+          emailAdress: credentials.emailAdress,
+          password: credentials.password,
+          street: 'Main Street 123',
+          city: 'Amsterdam',
+        };
         data.should.be.an('object');
         message.should.be.equal('Profielgegevens opgehaald');
-        data.should.have.property('firstname').to.be.equal('Ammar');
-        data.should.have.property('lastname').to.be.equal('almifalani');
+        data.should.have.property('firstName').to.be.equal(user.firstName);
+        data.should.have.property('lastName').to.be.equal(user.lastName);
+        data.should.have.property('emailAdress').to.be.equal(user.emailAdress);
+        data.should.have.property('password').to.be.equal(user.password);
+        data.should.have.property('street').to.be.equal(user.street);
+        data.should.have.property('city').to.be.equal(user.city);
         done();
       });
   });
 
-  it('TC-203-3 should return error if user not found', (done) => {
+  it('TC-203-2 should return error if user not found', (done) => {
     const credentials = {
-      emailaddress: 'nonexistentuser@example.com',
+      emailAdress: 'nonexistentuser@example.com',
       password: 'P@ssw0rd!',
     };
     chai
@@ -364,9 +376,9 @@ describe('Get User Profile', function () {
       });
   });
 
-  it('TC-203-4 should return error if password is incorrect', (done) => {
+  it('TC-203-3 should return error if password is incorrect', (done) => {
     const credentials = {
-      emailaddress: 'ammar@gmail.com',
+      emailAdress: 'john.doeNewVersion@example.com',
       password: 'IncorrectPassword!',
     };
     chai
