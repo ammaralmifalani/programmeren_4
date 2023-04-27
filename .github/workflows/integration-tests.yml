@@ -17,7 +17,6 @@ jobs:
         ports:
           - 3306:3306
         options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
-        network_mode: "host"
     steps:
       # Checkout the Repo
       - uses: actions/checkout@v2
@@ -35,7 +34,7 @@ jobs:
       - name: Set up environment variables
         run: |
           echo "PORT=3000" >> .env
-          echo "DB_HOST=127.0.0.1" >> .env
+          echo "DB_HOST=mysql" >> .env
           echo "DB_PORT=3306" >> .env
           echo "DB_USER=root" >> .env
           echo "DB_PASSWORD=mysecretpassword" >> .env
@@ -47,3 +46,4 @@ jobs:
 
       # Run tests
       - run: npm test
+
