@@ -3,7 +3,7 @@ name: Run the integration tests
 on:
   push:
     # branches:
-    #     - develop_branch
+    #     -feature-branch
 
 jobs:
   integrationtests:
@@ -20,6 +20,16 @@ jobs:
 
       # Install dependencies
       - run: npm ci
+
+      # Set up environment variables
+      - name: Set up environment variables
+        run: |
+          echo "PORT=3000" >> .env
+          echo "DB_HOST=127.0.0.1" >> .env
+          echo "DB_PORT=3306" >> .env
+          echo "DB_USER=root" >> .env
+          echo "DB_PASSWORD=" >> .env
+          echo "DB_DATABASE=share-a-meal-programmeren-4" >> .env
 
       # Run tests
       - run: npm test
