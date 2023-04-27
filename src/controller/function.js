@@ -14,9 +14,14 @@ function validatePhoneNumber(phoneNumber) {
   const regex = /^\d{10}$/;
   return regex.test(phoneNumber);
 }
+function getRandomEmail() {
+  const randomString = Math.random().toString(36).substring(2, 7); // Genereert een willekeurige tekenreeks van 5 karakters
+  return `john.doe${randomString}@example.com`;
+}
 // Exporting validation functions for email, password, and phone number
 module.exports = {
   validateEmail: validateEmail,
   validatePassword: validatePassword,
   validatePhoneNumber: validatePhoneNumber,
+  getRandomEmail: getRandomEmail,
 };

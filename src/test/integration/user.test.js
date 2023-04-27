@@ -7,6 +7,7 @@ const database = require('../../database/dbconnection');
 const { getTableLength } = require('../../controller/userController');
 const userController = require('../../controller/userController');
 // let index = database.users.length;
+const fun = require('../../controller/function');
 require('tracer').setLevel('error');
 chai.should();
 chai.use(chaiHttp);
@@ -18,7 +19,7 @@ describe('Register User', function () {
       firstName: 'John',
       lastName: 'Doe',
       isActive: 1,
-      emailAdress: 'john.doeNewVersionabcder@example.com', // Ongeldig e-mailadres
+      emailAdress: fun.getRandomEmail(),
       password: 'Abcde@123',
       phoneNumber: '0612345678',
       roles: '',
@@ -42,15 +43,17 @@ describe('Register User', function () {
           `Gebruiker met e-mailadres ${newUser.emailAdress} is geregistreerd`
         );
 
-        data.should.have.property('firstName').to.be.equal('John');
-        data.should.have.property('lastName').to.be.equal('Doe');
-        data.should.have.property('street').to.be.equal('Main Street 123');
-        data.should.have.property('city').to.be.equal('Amsterdam');
+        data.should.have.property('firstName').to.be.equal(newUser.firstName);
+        data.should.have.property('lastName').to.be.equal(newUser.lastName);
+        data.should.have.property('street').to.be.equal(newUser.street);
+        data.should.have.property('city').to.be.equal(newUser.city);
         data.should.have
           .property('emailAdress')
-          .to.be.equal('john.doeNewVersionabcd@example.com');
-        data.should.have.property('password').to.be.equal('Abcde@123');
-        data.should.have.property('phoneNumber').to.be.equal('0612345678');
+          .to.be.equal(newUser.emailAdress);
+        data.should.have.property('password').to.be.equal(newUser.password);
+        data.should.have
+          .property('phoneNumber')
+          .to.be.equal(newUser.phoneNumber);
         done();
       });
   });
@@ -60,7 +63,7 @@ describe('Register User', function () {
       firstName: 'John',
       lastName: 'Doe',
       isActive: 1,
-      emailAdress: 'john.doe@.example', // Ongeldig e-mailadres
+      emailAdress: 'john.doe@.example', // Invalid email address
       password: 'Abcde@123',
       phoneNumber: '0612345678',
       roles: '',
@@ -87,9 +90,9 @@ describe('Register User', function () {
       firstName: 'John',
       lastName: 'Doe',
       isActive: 1,
-      emailAdress: 'john.doeNewVersion@example.com',
+      emailAdress: fun.getRandomEmail(),
       password: 'Abcde@123',
-      phoneNumber: '612345678',
+      phoneNumber: '612345678', // Invalid phoneNumber
       roles: '',
       street: 'Main Street 123',
       city: 'Amsterdam',
@@ -116,8 +119,8 @@ describe('Register User', function () {
       firstName: 'John',
       lastName: 'Doe',
       isActive: 1,
-      emailAdress: 'john.doeNewVersion@example.com',
-      password: 'abcdefg',
+      emailAdress: fun.getRandomEmail(),
+      password: 'abcdefg', // Invalid password
       phoneNumber: '0987654321',
       roles: '',
       street: 'Main Street 123',
@@ -145,7 +148,7 @@ describe('Register User', function () {
       firstName: 'John',
       lastName: '',
       isActive: 1,
-      emailAdress: 'john.doeNewVersionabcde@example.com', // Ongeldig e-mailadres
+      emailAdress: fun.getRandomEmail(), // Ongeldig e-mailadres
       password: 'Abcde@123',
       phoneNumber: '0612345678',
       roles: '',
@@ -172,7 +175,7 @@ describe('Register User', function () {
       firstName: 'John',
       // lastName: '',
       isActive: 1,
-      emailAdress: 'john.doeNewVersionabcde@example.com', // Ongeldig e-mailadres
+      emailAdress: fun.getRandomEmail(), // Ongeldig e-mailadres
       password: 'Abcde@123',
       phoneNumber: '0612345678',
       roles: '',
@@ -199,7 +202,7 @@ describe('Register User', function () {
       firstName: 'John',
       lastName: 1,
       isActive: 1,
-      emailAdress: 'john.doeNewVersionabcdehr@example.com', // Ongeldig e-mailadres
+      emailAdress: fun.getRandomEmail(),
       password: 'Abcde@123',
       phoneNumber: '0612345678',
       roles: '',
@@ -228,7 +231,7 @@ describe('Register User', function () {
       firstName: 'John',
       lastName: 'Doe',
       isActive: 1,
-      emailAdress: 'john.doeNewVersionabcdehrsghrr@example.com', // Ongeldig e-mailadres
+      emailAdress: fun.getRandomEmail(),
       password: 'Abcde@123',
       phoneNumber: '',
       roles: '',
@@ -252,47 +255,22 @@ describe('Register User', function () {
           `Gebruiker met e-mailadres ${newUser.emailAdress} is geregistreerd`
         );
 
-        data.should.have.property('firstName').to.be.equal('John');
-        data.should.have.property('lastName').to.be.equal('Doe');
-        data.should.have.property('street').to.be.equal('Main Street 123');
-        data.should.have.property('city').to.be.equal('Amsterdam');
+        data.should.have.property('firstName').to.be.equal(newUser.firstName);
+        data.should.have.property('lastName').to.be.equal(newUser.lastName);
+        data.should.have.property('street').to.be.equal(newUser.street);
+        data.should.have.property('city').to.be.equal(newUser.city);
         data.should.have
           .property('emailAdress')
-          .to.be.equal('john.doeNewVersionabcdehrsgh@example.com');
-        data.should.have.property('password').to.be.equal('Abcde@123');
-        data.should.have.property('phoneNumber').to.be.equal(''); // Check if phoneNumber is an empty string
+          .to.be.equal(newUser.emailAdress);
+        data.should.have.property('password').to.be.equal(newUser.password);
+        data.should.have
+          .property('phoneNumber')
+          .to.be.equal(newUser.phoneNumber);
         done();
       });
   });
 });
 // Test case UC-202
-// describe('Get All Users', function () {
-//   it('TC-202-1 should return all users in the database', (done) => {
-//     chai
-//       .request(app)
-//       .get('/api/user')
-//       .end((err, res) => {
-//         expect(err).to.be.null;
-
-//         // Get the expected length of the user table
-//         getTableLength('user', (tableErr, tableLength) => {
-//           if (tableErr) {
-//             logger.error(tableErr);
-//           }
-
-//           res.body.should.be.an('object');
-//           res.body.should.have.property('status').to.be.equal(200);
-//           res.body.should.have.property('message');
-//           res.body.should.have.property('data');
-//           let { data, message, status } = res.body;
-//           data.should.be.an('array');
-//           message.should.be.equal('server info-endpoint');
-//           data.length.should.be.equal(tableLength);
-//           done();
-//         });
-//       });
-//   });
-// });
 describe('Get All Users', function () {
   it('TC-202-1 should return all users in the database', (done) => {
     chai

@@ -37,6 +37,7 @@ const userController = {
       );
     });
   },
+  // CreateUser creates a new user and adds it to the database
   createUser: (req, res) => {
     const newUser = ({
       firstName,
@@ -194,80 +195,6 @@ const userController = {
       });
     });
   },
-
-  // // CreateUser creates a new user and adds it to the database
-  // CreateUser: (req, res) => {
-  //   // Get the user information from the request body
-  //   const user = req.body;
-  //   logger.debug('user = ', user);
-
-  //   // Validate the user information using assertions
-  //   try {
-  //     assert(typeof user.firstname === 'string', 'firstName must be a string');
-  //     assert(typeof user.lastname === 'string', 'lastName must be a string');
-  //     assert(typeof user.street === 'string', 'street must be a string');
-  //     assert(typeof user.city === 'string', 'city must be a string');
-  //     assert(
-  //       typeof user.emailaddress === 'string',
-  //       'emailAddress must be a string'
-  //     );
-  //     assert(typeof user.password === 'string', 'password must be a string');
-  //     assert(
-  //       typeof user.phonenumber === 'string',
-  //       'phoneNumber must be a string'
-  //     );
-
-  //     if (!fun.validateEmail(user.emailaddress)) {
-  //       throw new Error('Ongeldig e-mailadres');
-  //     }
-
-  //     if (!fun.validatePassword(user.password)) {
-  //       throw new Error(
-  //         'Ongeldig wachtwoord. Het wachtwoord moet minstens 8 tekens lang zijn, een hoofdletter, een kleine letter, een cijfer en een speciaal teken bevatten.'
-  //       );
-  //     }
-
-  //     if (!fun.validatePhoneNumber(user.phonenumber)) {
-  //       throw new Error(
-  //         'Ongeldig telefoonnummer. Het telefoonnummer moet 10 cijfers lang zijn.'
-  //       );
-  //     }
-  //   } catch (err) {
-  //     // If any assertion fails, log the error message and return a 400 Bad Request response
-  //     logger.warn(err.message.toString());
-  //     res.status(400).json({
-  //       status: 400,
-  //       message: err.message.toString(),
-  //       data: {},
-  //     });
-  //     return;
-  //   }
-  //   // Check if a user with the same email address already exists
-  //   const emailExists = database.users.some(
-  //     (existingUser) => existingUser.emailaddress === user.emailaddress
-  //   );
-
-  //   // If the email already exists, return a 400 Bad Request response
-  //   if (emailExists) {
-  //     return res.status(400).json({
-  //       status: 400,
-  //       message: 'Een gebruiker met dit e-mailadres bestaat al',
-  //       data: {},
-  //     });
-  //   }
-
-  //   // Assign a new ID to the user and add it to the database
-  //   user.id = index++;
-  //   database.users.push(user);
-  //   logger.info(`New user with ID ${user.id} added to the database.`);
-
-  //   // Send the response with the user data and a success message
-  //   res.status(200).json({
-  //     status: 200,
-  //     message: `Gebruiker met id ${user.id} is geregistreerd`,
-  //     data: user,
-  //   });
-  // },
   // deleteUser deletes a user from the database based on their email and password
   deleteUser: (req, res) => {
     try {
@@ -470,67 +397,6 @@ const userController = {
       );
     });
   },
-
-  // getUserProfile: (req, res) => {
-  //   try {
-  //     const { emailaddress, password } = req.body;
-  //     console.log(req.body);
-  //     // Check if emailaddress and password are strings, otherwise throw an error    // Check if emailaddress and password are strings, otherwise throw an error
-  //     assert(typeof emailaddress === 'string', 'emailAddress must be a string');
-  //     assert(typeof password === 'string', 'password must be a string');
-  //     // Find the index of the user with the given email address
-  //     const userIndex = database.users.findIndex(
-  //       (user) => user.emailaddress === emailaddress
-  //     );
-  //     // If the user is not found, throw an error
-  //     if (userIndex === -1) {
-  //       throw new Error('Gebruiker niet gevonden');
-  //     }
-
-  //     const user = database.users[userIndex];
-  //     // If the given password does not match the user's password, throw an error
-  //     if (user.password !== password) {
-  //       throw new Error('Ongeldig wachtwoord');
-  //     }
-  //     // Create an object containing the user's profile details
-  //     const userDetails = {
-  //       firstname: user.firstname,
-  //       lastname: user.lastname,
-  //       emailaddress: user.emailaddress,
-  //       password: user.password,
-  //       street: user.street,
-  //       city: user.city,
-  //       phonenumber: user.phonenumber,
-  //       meals: user.meals,
-  //     };
-  //     // Log that the user's profile has been successfully fetched
-  //     logger.info(
-  //       `User with email ${user.emailaddress} has been successfully fetched.`
-  //     );
-  //     // Send a success response with the user's profile details
-  //     res.status(200).json({
-  //       status: 200,
-  //       message: 'Profielgegevens opgehaald',
-  //       data: userDetails,
-  //     });
-  //   } catch (err) {
-  //     // Log the error message
-  //     logger.warn(err.message.toString());
-  //     // Determine the appropriate status code for the error
-  //     let statusCode = 400;
-  //     if (err.message === 'Gebruiker niet gevonden') {
-  //       statusCode = 404;
-  //     } else if (err.message === 'Ongeldig wachtwoord') {
-  //       statusCode = 401;
-  //     }
-  //     // Send an error response with the appropriate status code
-  //     res.status(statusCode).json({
-  //       status: statusCode,
-  //       message: err.message.toString(),
-  //       data: {},
-  //     });
-  //   }
-  // },
   // getUserById retrieves a user's public information and associated meals based on their user ID
   getUserById: (req, res) => {
     const { id } = req.params;
