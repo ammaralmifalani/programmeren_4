@@ -40,5 +40,9 @@ jobs:
           echo "DB_PASSWORD=mysecretpassword" >> .env
           echo "DB_DATABASE=share-a-meal-programmeren-4" >> .env
 
+      # Wait for MySQL to become ready
+      - name: Wait for MySQL to become ready
+        run: sleep 15s
+
       # Run tests
       - run: npm test
