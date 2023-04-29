@@ -290,7 +290,7 @@ describe('Get All Users', function () {
           res.body.should.have.property('data');
           let { data, message, status } = res.body;
           data.should.be.an('array');
-          message.should.be.equal('server info-endpoint');
+          message.should.be.equal('User getAll endpoint');
           data.length.should.be.equal(tableLength);
           done();
         });

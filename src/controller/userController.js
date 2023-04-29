@@ -8,33 +8,42 @@ let index = database.users.length;
 // userController handles the routes for creating, updating, deleting, and retrieving user data
 const userController = {
   // getAllUsers retrieves all users from the database
-  getAllUsers: (req, res) => {
-    dbconnection.getConnection(function (err, connection) {
-      if (err) throw err; // not connected!
+  getAllUsers: (req, res, next) => {
+    logger.info('Get all users');
 
-      // Use the connection
-      connection.query(
-        'SELECT * FROM user;',
-        function (error, results, fields) {
-          // When done with the connection, release it.
-          connection.release();
-          // Handle error after the release.
-          if (error) throw error;
+    let sqlStatement = 'SELECT * FROM `user`';
+    // Hier wil je misschien iets doen met mogelijke filterwaarden waarop je zoekt.
+    if (req.query.isactive) {
+      // voeg de benodigde SQL code toe aan het sql statement
+      // bv sqlStatement += " WHERE `isActive=?`"
+    }
 
-          // Don't use the connection here, it has been returned to the pool.
-          logger.info('#results= ', results.length);
-
-          res.status(200).json({
-            status: 200,
-            message: 'server info-endpoint',
-            data: results,
-          });
-
-          // pool.end((error) => {
-          //   console.log('connection closed');
-          // });
-        }
-      );
+    dbconnection.getConnection(function (err, conn) {
+      // Do something with the connection
+      if (err) {
+        console.log('error', err);
+        next('error: ' + err.message);
+      }
+      if (conn) {
+        conn.query(sqlStatement, function (err, results, fields) {
+          if (err) {
+            logger.err(err.message);
+            next({
+              code: 409,
+              message: err.message,
+            });
+          }
+          if (results) {
+            logger.info('Found', results.length, 'results');
+            res.status(200).json({
+              status: 200,
+              message: 'User getAll endpoint',
+              data: results,
+            });
+          }
+        });
+        dbconnection.releaseConnection(conn);
+      }
     });
   },
   // CreateUser creates a new user and adds it to the database
@@ -50,7 +59,7 @@ const userController = {
       street,
       city,
     } = req.body);
-
+    logger.debug('user = ', newUser);
     // Validatie van e-mailadres
 
     if (!fun.validateEmail(newUser.emailAdress)) {
@@ -123,23 +132,6 @@ const userController = {
         });
       }
     }
-    // if (
-    //   typeof newUser.firstName !== 'string' ||
-    //   typeof newUser.lastName !== 'string' ||
-    //   typeof newUser.isActive !== 'boolean' ||
-    //   typeof newUser.emailAdress !== 'string' ||
-    //   typeof newUser.password !== 'string' ||
-    //   typeof newUser.phoneNumber !== 'string' ||
-    //   typeof newUser.roles !== 'string' ||
-    //   typeof newUser.street !== 'string' ||
-    //   typeof newUser.city !== 'string'
-    // ) {
-    //   return res.status(400).json({
-    //     status: 400,
-    //     message: 'Ongeldige veldtypen',
-    //     data: {},
-    //   });
-    // }
     dbconnection.getConnection(function (err, connection) {
       if (err) throw err; // not connected!
 
@@ -198,12 +190,12 @@ const userController = {
   // deleteUser deletes a user from the database based on their email and password
   deleteUser: (req, res) => {
     try {
-      const { emailaddress, password } = req.body;
+      const { emailAdress, password } = req.body;
       // Log the request body for debugging purposes
       logger.debug(req.body);
       // Find the index of the user with the given email address
       const userIndex = database.users.findIndex(
-        (user) => user.emailaddress === emailaddress
+        (user) => user.emailAdress === emailAdress
       );
       // If the user is not found, throw an error
       if (userIndex === -1) {
@@ -222,7 +214,7 @@ const userController = {
 
       // Log that the user has been successfully deleted
       logger.info(
-        `User with email ${emailaddress} has been successfully deleted.`
+        `User with email ${emailAdress} has been successfully deleted.`
       );
       // Send a success response
       res.status(200).json({
