@@ -532,8 +532,8 @@ describe('Update User', function () {
 describe('Delete User', function () {
   it('TC-206-1 should delete user', (done) => {
     const credentials = {
-      emailaddress: 'testuser@gmail.com',
-      password: 'P@ssw0rd!',
+      emailAdress: 'john.doeNewVersion_1@example.com',
+      password: 'Abcde@123',
     };
     chai
       .request(app)
@@ -545,16 +545,15 @@ describe('Delete User', function () {
         res.body.should.be.an('object');
         res.body.should.have.property('status').to.be.equal(200);
         let { data, message, status } = res.body;
-        message.should.be.equal('Gebruiker is met succes verwijderd');
-        Object.keys(data).length.should.be.equal(0);
-
+        message.should.be.equal('User deleted successfully');
+        Object.keys(data).length.should.be.equal(10);
         done();
       });
   });
 
   it('TC-206-2 should return error if user not found', (done) => {
     const credentials = {
-      emailaddress: 'nonexistentuser@example.com',
+      emailAdress: 'nonexistentuser@example.com',
       password: 'P@ssw0rd!',
     };
     chai
@@ -563,9 +562,9 @@ describe('Delete User', function () {
       .send(credentials)
       .end((err, res) => {
         res.body.should.be.an('object');
-        res.body.should.have.property('status').to.be.equal(404);
+        res.body.should.have.property('status').to.be.equal(401);
         let { data, message, status } = res.body;
-        message.should.be.equal('Gebruiker niet gevonden');
+        message.should.be.equal('Email address is incorrect');
         Object.keys(data).length.should.be.equal(0);
 
         done();
@@ -574,7 +573,7 @@ describe('Delete User', function () {
 
   it('TC-206-3 should return error if password is incorrect', (done) => {
     const credentials = {
-      emailaddress: 'ammar@gmail.com',
+      emailAdress: 'm.vandullemen@server.nl',
       password: 'IncorrectPassword!',
     };
     chai
@@ -585,7 +584,7 @@ describe('Delete User', function () {
         res.body.should.be.an('object');
         res.body.should.have.property('status').to.be.equal(401);
         let { data, message, status } = res.body;
-        message.should.be.equal('Ongeldig wachtwoord');
+        message.should.be.equal('Password is incorrect');
         Object.keys(data).length.should.be.equal(0);
 
         done();

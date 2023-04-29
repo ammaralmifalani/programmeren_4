@@ -29,8 +29,9 @@ const userController = {
           if (err) {
             logger.err(err.message);
             next({
-              code: 409,
+              status: 409,
               message: err.message,
+              data: {},
             });
           }
           if (results) {
@@ -188,57 +189,79 @@ const userController = {
     });
   },
   // deleteUser deletes a user from the database based on their email and password
-  deleteUser: (req, res) => {
-    try {
-      const { emailAdress, password } = req.body;
-      // Log the request body for debugging purposes
-      logger.debug(req.body);
-      // Find the index of the user with the given email address
-      const userIndex = database.users.findIndex(
-        (user) => user.emailAdress === emailAdress
-      );
-      // If the user is not found, throw an error
-      if (userIndex === -1) {
-        throw new Error('Gebruiker niet gevonden');
+  deleteUser: (req, res, next) => {
+    logger.info('Deleting user');
+
+    let sqlStatement = 'SELECT * FROM `user` WHERE  emailAdress=?';
+    let emailAdress = req.body.emailAdress;
+    let password = req.body.password;
+    logger.info('emailAddress =', emailAdress);
+    logger.info('password =', password);
+    dbconnection.getConnection(function (err, conn) {
+      if (err) {
+        console.log('error', err);
+        next('error: ' + err.message);
       }
-
-      const user = database.users[userIndex];
-
-      // If the given password does not match the user's password, throw an error
-      if (user.password !== password) {
-        throw new Error('Ongeldig wachtwoord');
+      if (conn) {
+        conn.query(
+          sqlStatement,
+          [emailAdress],
+          function (err, results, fields) {
+            if (err) {
+              logger.error(err.message);
+              next({
+                status: 409,
+                message: err.message,
+              });
+            }
+            if (results.length === 0) {
+              logger.error('Email address is incorrect');
+              res.status(401).json({
+                status: 401,
+                message: 'Email address is incorrect',
+                data: {},
+              });
+            }
+            if (results.length > 0) {
+              if (results[0].password !== password) {
+                logger.error('Password is incorrect');
+                res.status(401).json({
+                  status: 401,
+                  message: 'Password is incorrect',
+                  data: {},
+                });
+              }
+              if (results[0].password === password) {
+                let deletedUser = results[0];
+                sqlStatement = 'DELETE FROM `user` WHERE  emailAdress=?';
+                conn.query(
+                  sqlStatement,
+                  [emailAdress],
+                  function (err, results, fields) {
+                    if (err) {
+                      logger.error(err.message);
+                      next({
+                        status: 409,
+                        message: err.message,
+                      });
+                    }
+                    if (results) {
+                      logger.info('Deleted user with emailAdress', emailAdress);
+                      res.status(200).json({
+                        status: 200,
+                        message: 'User deleted successfully',
+                        data: deletedUser,
+                      });
+                    }
+                  }
+                );
+              }
+            }
+          }
+        );
+        dbconnection.releaseConnection(conn);
       }
-
-      // Remove the user from the database
-      database.users.splice(userIndex, 1);
-
-      // Log that the user has been successfully deleted
-      logger.info(
-        `User with email ${emailAdress} has been successfully deleted.`
-      );
-      // Send a success response
-      res.status(200).json({
-        status: 200,
-        message: 'Gebruiker is met succes verwijderd',
-        data: {},
-      });
-    } catch (err) {
-      // Log the error message
-      logger.warn(err.message.toString());
-      // Determine the appropriate status code for the error
-      let statusCode = 400;
-      if (err.message === 'Gebruiker niet gevonden') {
-        statusCode = 404;
-      } else if (err.message === 'Ongeldig wachtwoord') {
-        statusCode = 401;
-      }
-      // Send an error response with the appropriate status code
-      res.status(statusCode).json({
-        status: statusCode,
-        message: err.message.toString(),
-        data: {},
-      });
-    }
+    });
   },
   // updateUser updates a user's information in the database based on their email and password
   updateUser: (req, res) => {
