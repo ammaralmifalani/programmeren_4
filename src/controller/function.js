@@ -11,6 +11,9 @@ function validatePassword(password) {
 }
 // Validates the phone number using a regular expression
 function validatePhoneNumber(phoneNumber) {
+  if (!phoneNumber) {
+    return true; // Empty phone numbers are allowed
+  }
   const regex = /^\d{10}$/;
   return regex.test(phoneNumber);
 }
