@@ -9,11 +9,11 @@ const userController = require('../../controller/userController');
 // let index = database.users.length;
 const logger = require('../utils/utils').logger;
 const fun = require('../../controller/function');
-require('tracer').setLevel('error');
+require('tracer').setLevel('debug');
 chai.should();
 chai.use(chaiHttp);
 
-// function to not repeat the data
+// function to not store the data in the database but delete it immediately after execution, i.e. only for testing purposes
 function createTestUser(done) {
   const testUser = {
     firstName: 'testFirstName',
@@ -53,7 +53,6 @@ function deleteTestUser(done) {
       done();
     });
 }
-
 // Test case UC-201.
 describe('Register User', function () {
   afterEach(function (done) {
@@ -347,7 +346,7 @@ describe('Get User Profile', function () {
   it('TC-203-1 should return user profile data', (done) => {
     const credentials = {
       emailAdress: 'john.doe@example.com',
-      password: 'johndoepassword',
+      password: 'Abcd@123',
     };
     chai
       .request(app)
@@ -479,14 +478,14 @@ describe('Update User', function () {
   // User updated successfully
   it('TC-205-1 should update user data', (done) => {
     const requestData = {
-      emailAdress: 'ammar@gmail.com',
-      password: 'NewP@ssw0rd!',
+      emailAdress: 'john.doe@example.com',
+      password: 'Abcd@123',
       updateData: {
-        firstName: 'UpdatedAmmar',
-        lastName: 'UpdatedAlmifalani',
-        street: '456 Updated St',
-        city: 'UpdatedAmsterdam',
-        newPassword: 'NewP@ssw0rd!',
+        firstName: 'John',
+        lastName: 'Doe',
+        street: 'Main Street 123',
+        city: 'Amsterdam',
+        newPassword: 'Abcd@123',
         phoneNumber: '0698765432',
       },
     };
@@ -552,7 +551,7 @@ describe('Update User', function () {
   // Invalid password
   it('TC-205-3 should return error if password is incorrect', (done) => {
     const requestData = {
-      emailAdress: 'ammar@gmail.com',
+      emailAdress: 'john.doe@example.com',
       password: 'IncorrectPassword!',
       updateData: {
         firstName: 'UpdatedAmmar',
@@ -572,12 +571,11 @@ describe('Update User', function () {
         done();
       });
   });
-
   // Invalid firstName test
   it('TC-205-4 should return error if firstName is not a string', (done) => {
     const requestData = {
-      emailAdress: 'ammar@gmail.com',
-      password: 'NewP@ssw0rd!',
+      emailAdress: 'john.doe@example.com',
+      password: 'Abcd@123',
       updateData: {
         firstName: 123,
       },
@@ -600,8 +598,8 @@ describe('Update User', function () {
   // Invalid lastName test
   it('TC-205-5 should return error if lastName is not a string', (done) => {
     const requestData = {
-      emailAdress: 'ammar@gmail.com',
-      password: 'NewP@ssw0rd!',
+      emailAdress: 'john.doe@example.com',
+      password: 'Abcd@123',
       updateData: {
         lastName: 456,
       },
@@ -624,8 +622,8 @@ describe('Update User', function () {
   // Invalid street test
   it('TC-205-6 should return error if street is not a string', (done) => {
     const requestData = {
-      emailAdress: 'ammar@gmail.com',
-      password: 'NewP@ssw0rd!',
+      emailAdress: 'john.doe@example.com',
+      password: 'Abcd@123',
       updateData: {
         street: 789,
       },
@@ -648,8 +646,8 @@ describe('Update User', function () {
   // Invalid city test
   it('TC-205-7 should return error if city is not a string', (done) => {
     const requestData = {
-      emailAdress: 'ammar@gmail.com',
-      password: 'NewP@ssw0rd!',
+      emailAdress: 'john.doe@example.com',
+      password: 'Abcd@123',
       updateData: {
         city: 101112,
       },
@@ -672,8 +670,8 @@ describe('Update User', function () {
   // Invalid phoneNumber test
   it('TC-205-8 should return error if phoneNumber is invalid', (done) => {
     const requestData = {
-      emailAdress: 'ammar@gmail.com',
-      password: 'NewP@ssw0rd!',
+      emailAdress: 'john.doe@example.com',
+      password: 'Abcd@123',
       updateData: {
         phoneNumber: '123456789',
       },
@@ -697,8 +695,8 @@ describe('Update User', function () {
   // Invalid newPassword test
   it('TC-205-9 should return error if newPassword is invalid', (done) => {
     const requestData = {
-      emailAdress: 'ammar@gmail.com',
-      password: 'NewP@ssw0rd!',
+      emailAdress: 'john.doe@example.com',
+      password: 'Abcd@123',
       updateData: {
         newPassword: 'invalidpassword',
       },
@@ -723,8 +721,8 @@ describe('Update User', function () {
   // Update phoneNumber to empty
   it('TC-205-10 should update phoneNumber to empty', (done) => {
     const requestData = {
-      emailAdress: 'ammar@gmail.com',
-      password: 'NewP@ssw0rd!',
+      emailAdress: 'john.doe@example.com',
+      password: 'Abcd@123',
       updateData: {
         phoneNumber: '',
       },
@@ -748,7 +746,6 @@ describe('Update User', function () {
       });
   });
 });
-
 // Test case UC-206
 describe('Delete User', function () {
   beforeEach(function (done) {
@@ -817,72 +814,3 @@ describe('Delete User', function () {
       });
   });
 });
-
-//   beforeEach(function (done) {
-//     createTestUser(done);
-//   });
-
-//   afterEach(function (done) {
-//     deleteTestUser(done);
-//   });
-//   it('TC-206-1 should delete user', (done) => {
-//     const credentials = {
-//       emailAdress: 'testEmail@test.com',
-//       password: 'Test@123',
-//     };
-//     chai
-//       .request(app)
-//       .delete('/api/user/delete')
-//       .send(credentials)
-//       .end((err, res) => {
-//         console.log('Response body:', res.body);
-//         assert(err === null);
-//         res.body.should.be.an('object');
-//         res.body.should.have.property('status').to.be.equal(200);
-//         let { data, message, status } = res.body;
-//         message.should.be.equal('User deleted successfully');
-//         Object.keys(data).length.should.be.equal(10);
-//         done();
-//       });
-//   });
-
-//   it('TC-206-2 should return error if user not found', (done) => {
-//     const credentials = {
-//       emailAdress: 'testEmail@test.com',
-//       password: 'Test@123',
-//     };
-//     chai
-//       .request(app)
-//       .delete('/api/user/delete')
-//       .send(credentials)
-//       .end((err, res) => {
-//         res.body.should.be.an('object');
-//         res.body.should.have.property('status').to.be.equal(401);
-//         let { data, message, status } = res.body;
-//         message.should.be.equal('Email address is incorrect');
-//         Object.keys(data).length.should.be.equal(0);
-
-//         done();
-//       });
-//   });
-
-//   it('TC-206-3 should return error if password is incorrect', (done) => {
-//     const credentials = {
-//       emailAdress: 'testEmail@test.com',
-//       password: 'Test@123',
-//     };
-//     chai
-//       .request(app)
-//       .delete('/api/user/delete')
-//       .send(credentials)
-//       .end((err, res) => {
-//         res.body.should.be.an('object');
-//         res.body.should.have.property('status').to.be.equal(401);
-//         let { data, message, status } = res.body;
-//         message.should.be.equal('Password is incorrect');
-//         Object.keys(data).length.should.be.equal(0);
-
-//         done();
-//       });
-//   });
-// });
