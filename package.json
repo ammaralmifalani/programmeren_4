@@ -1,5 +1,5 @@
 {
-  "name": "voorbeeld_les_2",
+  "name": "share-a-meal-server",
   "version": "1.0.0",
   "description": "express server",
   "main": "index.js",
