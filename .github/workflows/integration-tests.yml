@@ -40,8 +40,8 @@ jobs:
           npm install
 
       - name: npm test
-        run: |
-          npm test -- --DB_PASSWORD $MYSQL_ROOT_PASSWORD --DB_USER root --DB_NAME $DB_DATABASE
+       run: |
+          npm test -- --DB_PASSWORD=${{ env.MYSQL_ROOT_PASSWORD }} --DB_USER=${{ env.DB_USER }} --DB_NAME=${{ env.DB_DATABASE }} --DB_HOST=${{ env.DB_HOST }} --DB_PORT=${{ env.DB_PORT }}
 
   #   Heroku-deploy:
   #     needs: integrationtests
