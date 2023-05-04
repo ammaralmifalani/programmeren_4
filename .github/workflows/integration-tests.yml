@@ -9,13 +9,12 @@ jobs:
   integrationtests:
     runs-on: ubuntu-latest
     env:
-      MYSQL_ROOT_PASSWORD: root # default root password to use must be 'root'
+      MYSQL_ROOT_PASSWORD: root
       DB_HOST: 127.0.0.1
       DB_PORT: 3306
       DB_DATABASE: shareameal
       DB_USER: root
       DB_PASSWORD: root
-
     services:
       mysql:
         image: mysql:5.7
@@ -25,9 +24,13 @@ jobs:
           MYSQL_USER: ${{ env.DB_USER }}
         ports:
           - 3306
-
     steps:
       - uses: actions/checkout@v2
+
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v2
+        with:
+          node-version: 16
 
       - name: Start MySQL connection from host
         run: |
@@ -42,10 +45,12 @@ jobs:
       - name: npm install
         run: |
           npm install
+      - name: Wait for MySQL service to be ready
+        run: sleep 10
       - name: npm test
         run: |
           npm test -- --DB_PASSWORD=${{ env.DB_PASSWORD }} --DB_USER=${{ env.DB_USER }} --DB_NAME=${{ env.DB_DATABASE }} --DB_HOST=${{ env.DB_HOST }} --DB_PORT=${{ env.DB_PORT }}
-
+          
   Railway-deploy:
     runs-on: ubuntu-latest
     environment:
