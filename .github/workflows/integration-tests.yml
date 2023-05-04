@@ -38,6 +38,7 @@ jobs:
           sudo apt-get install -y mysql-client
           mysql -uroot -p${{ env.MYSQL_ROOT_PASSWORD }} -e "SHOW DATABASES;"
           mysql -uroot -p${{ env.MYSQL_ROOT_PASSWORD }} -e "CREATE DATABASE ${{env.DB_DATABASE}};"
+          mysql -uroot -p${{ env.MYSQL_ROOT_PASSWORD }} -e "ALTER USER '${{ env.DB_USER }}'@'%' IDENTIFIED WITH mysql_native_password BY '${{ env.DB_PASSWORD }}';"
       - name: Import database script
         run: |
           mysql -uroot -p${{env.MYSQL_ROOT_PASSWORD}} ${{env.DB_DATABASE}} < share-a-meal.sql
