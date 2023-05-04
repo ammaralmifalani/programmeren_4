@@ -8,13 +8,13 @@ on:
 jobs:
   integrationtests:
     runs-on: ubuntu-latest
-    env:
-      PORT: 3000
-      DB_HOST: localhost
-      DB_PORT: 3306
-      DB_USER: root
-      DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-      DB_DATABASE: 2206669
+    # env:
+    #   PORT: 3000
+    #   DB_HOST: localhost
+    #   DB_PORT: 3306
+    #   DB_USER: root
+    #   DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+    #   DB_DATABASE: 2206669
     steps:
       # Checkout the Repo
       - uses: actions/checkout@v2
