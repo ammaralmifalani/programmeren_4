@@ -15,11 +15,17 @@ jobs:
       DB_DATABASE: shareameal
       DB_USER: root
       DB_PASSWORD: root
+
     services:
       mysql:
         image: mysql:5.7
+        env:
+          MYSQL_ROOT_PASSWORD: ${{ env.MYSQL_ROOT_PASSWORD }}
+          MYSQL_DATABASE: ${{ env.DB_DATABASE }}
+          MYSQL_USER: ${{ env.DB_USER }}
         ports:
           - 3306
+
     steps:
       - uses: actions/checkout@v2
 
