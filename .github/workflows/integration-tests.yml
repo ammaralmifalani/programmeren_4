@@ -29,36 +29,18 @@ jobs:
           sudo apt-get install -y mysql-client
           mysql -uroot -p${{ env.MYSQL_ROOT_PASSWORD }} -e "SHOW DATABASES;"
           mysql -uroot -p${{ env.MYSQL_ROOT_PASSWORD }} -e "CREATE DATABASE ${{env.DB_DATABASE}};"
-
       - name: Import database script
         run: |
           mysql -uroot -p${{env.MYSQL_ROOT_PASSWORD}} ${{env.DB_DATABASE}} < share-a-meal.sql
           mysql -uroot -p${{env.MYSQL_ROOT_PASSWORD}} ${{env.DB_DATABASE}} -e "SHOW TABLES;"
-
       - name: npm install
         run: |
           npm install
-
       - name: npm test
-       run: |
-        npm test -- --DB_PASSWORD=${{ env.DB_PASSWORD }} --DB_USER=${{ env.DB_USER }} --DB_NAME=${{ env.DB_DATABASE }} --DB_HOST=${{ env.DB_HOST }} --DB_PORT=${{ env.DB_PORT }}
-
-  #   Heroku-deploy:
-  #     needs: integrationtests
-  #     runs-on: ubuntu-latest
-  #     environment:
-  #       name: Heroku # naam van mijn environment op GitHub
-  #     steps:
-  #       - uses: actions/checkout@v2
-  #       - uses: akhileshns/heroku-deploy@v3.12.12
-  #         with:
-  #           heroku_api_key: ${{secrets.HEROKU_API_KEY}}
-  #           heroku_app_name: shareameal-prog4
-  #           heroku_email: ${{secrets.HEROKU_USER_EMAIL}}
+        run: |
+          npm test -- --DB_PASSWORD=${{ env.DB_PASSWORD }} --DB_USER=${{ env.DB_USER }} --DB_NAME=${{ env.DB_DATABASE }} --DB_HOST=${{ env.DB_HOST }} --DB_PORT=${{ env.DB_PORT }}
 
   Railway-deploy:
-    # Deze optie moet je aanzetten zodra je de tests hebt uitgewerkt.
-    # needs: integrationtests
     runs-on: ubuntu-latest
     environment:
       name: Railway # naam van mijn environment op GitHub
@@ -69,7 +51,6 @@ jobs:
       - name: 'Current token'
         run: |
           echo "secrets.RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}"
-
       - name: Install Railway
         run: npm i -g @railway/cli
 
