@@ -41,7 +41,7 @@ jobs:
 
       - name: npm test
        run: |
-          npm test -- --DB_PASSWORD=$Env:DB_PASSWORD --DB_USER=$Env:DB_USER --DB_NAME=$Env:DB_DATABASE --DB_HOST=$Env:DB_HOST --DB_PORT=$Env:DB_PORT
+        npm test -- --DB_PASSWORD=${{ env.DB_PASSWORD }} --DB_USER=${{ env.DB_USER }} --DB_NAME=${{ env.DB_DATABASE }} --DB_HOST=${{ env.DB_HOST }} --DB_PORT=${{ env.DB_PORT }}
 
   #   Heroku-deploy:
   #     needs: integrationtests
