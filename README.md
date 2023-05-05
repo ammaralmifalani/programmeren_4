@@ -1,24 +1,20 @@
 # Share-a-Meal API Server
+## Introduction
+This is the API server for the Share-a-Meal project. Share-a-Meal is a platform where users can share meals with others in their local area. This server is built with Node.js and Express and uses MySQL for the database.
 
-Dit is de API-server voor het Share-a-Meal project. Share-a-Meal is een platform waar gebruikers maaltijden kunnen delen met anderen in hun omgeving. Deze server is gebouwd met Node.js en Express en maakt gebruik van MySQL voor de database.
-
-## Vereisten
-
+## Requirements
 - Node.js
 - MySQL
+## Installation
+### Step 1: Clone the Repository
 
-## Installatie
-
-1. Clone deze repository:
-
-git clone <>
-
-2. Navigeer naar de projectmap en installeer de vereiste pakketten:
-
-cd share_a_meal_server
-npm install
-
-3. Maak een `.env`-bestand aan in de hoofdmap van het project en voeg de volgende variabelen toe, met je eigen waarden:
+`git clone https://github.com/ammaralmifalani/shareameal_api_server.git`
+### Step 2: Install Dependencies
+Navigate to the project folder and install the required packages:
+`cd share_a_meal_server`
+`npm install`
+### Step 3: Configure Environment Variables
+Create a `.env` file in the root folder of the project and add the following variables, using your own values:
 
 DB_HOST=<your_database_host>
 DB_PORT=<your_database_port>
@@ -26,16 +22,17 @@ DB_USER=<your_database_user>
 DB_PASSWORD=<your_database_password>
 DB_DATABASE=<your_database_name>
 
-4. Start de API-server:
+### Step 4: Start the API Server
 
-npm start
+`npm start`
 
-De server moet nu draaien op `http://localhost:3000` of de poort die je hebt opgegeven in je `.env`-bestand.
-
+The server should now be running at `http://localhost:3000` or the port you specified in your `.env` file.
 ## API Endpoints
-
-- `GET /api/users`: Haal alle gebruikers op
-- `GET /api/users/:id`: Haal een gebruiker op op basis van ID
-- `POST /api/users`: Maak een nieuwe gebruiker aan
-- `PUT /api/users`: Werk een bestaande gebruiker bij op basis van e-mailadres en password
-- `DELETE /api/users`: Verwijder een gebruiker op basis van e-mailadres en password
+### Server Information
+- `GET /api/info` : Retrieve server information
+### Users
+- `GET /api/users`: Get all users
+- `GET /api/users/:id`: Get a user by ID
+- `POST /api/users`: Create a new user
+- `PUT /api/users`: Update an existing user based on email address and password
+- `DELETE /api/users`: Delete a user based on email address and password
