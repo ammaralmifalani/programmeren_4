@@ -15,6 +15,10 @@ app.use('*', (req, res, next) => {
   logger.trace(`methode ${method} is aangeroepen for URL: ${url}`);
   next();
 });
+// Route: welcome message
+app.use('/', (req, res) => {
+  res.send('welcome to server API van de share a meal');
+});
 
 // Define a route for server info
 app.get('/api/info', (req, res) => {
