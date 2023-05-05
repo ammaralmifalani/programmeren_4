@@ -11,20 +11,17 @@ This is the API server for the Share-a-Meal project. Share-a-Meal is a platform 
 ### Step 2: Install Dependencies
 Navigate to the project folder and install the required packages:
 - `cd share_a_meal_server`
-- `npm install`
-  
+- `npm install` 
 ### Step 3: Import Database Structure
 Create a new MySQL database for your project and import the share-a-meal.sql file to set up the necessary tables and structures:
 - mysql -u <your_database_user> -p <your_database_name> < share-a-meal.sql
 ### Step 4: Configure Environment Variables
 Create a `.env` file in the root folder of the project and add the following variables, using your own values:
-
 - DB_HOST=<your_database_host>
 - DB_PORT=<your_database_port>
 - DB_USER=<your_database_user>
 - DB_PASSWORD=<your_database_password>
 - DB_DATABASE=<your_database_name>
-
 ### Step 5: Start the API Server
 
 `npm start`

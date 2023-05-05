@@ -84,7 +84,7 @@ describe('Register User', function () {
         let { data, message, status } = res.body;
 
         message.should.be.equal(
-          `Gebruiker met e-mailadres ${newUser.emailAdress} is geregistreerd`
+          `User with email address ${newUser.emailAdress} is registered`
         );
 
         data.should.have.property('firstName').to.be.equal(newUser.firstName);
@@ -122,14 +122,14 @@ describe('Register User', function () {
         res.body.should.be.an('object');
         res.body.should.have.property('status').to.be.equal(400);
         let { data, message, status } = res.body;
-        message.should.be.equal('Ongeldig e-mailadres');
+        message.should.be.equal('Invalid email address');
         Object.keys(data).length.should.be.equal(0);
 
         done();
       });
   });
 
-  it('TC-201-3 should return an error if phonenumber is invalid', (done) => {
+  it('TC-201-3 should return an error if phoneNumber is invalid', (done) => {
     const newUser = {
       firstName: 'testFirstName',
       lastName: 'testLastName',
@@ -150,7 +150,7 @@ describe('Register User', function () {
         res.body.should.have.property('status').to.be.equal(400);
         let { data, message, status } = res.body;
         message.should.be.equal(
-          'Ongeldig telefoonnummer. Het telefoonnummer moet 10 cijfers lang zijn.'
+          'Invalid phone number. Phone number must be 10 digits long.'
         );
         Object.keys(data).length.should.be.equal(0);
 
@@ -179,7 +179,7 @@ describe('Register User', function () {
         res.body.should.have.property('status').to.be.equal(400);
         let { data, message, status } = res.body;
         message.should.be.equal(
-          'Ongeldig wachtwoord. Het wachtwoord moet minstens 8 tekens lang zijn, een hoofdletter, een kleine letter, een cijfer en een speciaal teken bevatten.'
+          'Invalid password. The password must be at least 8 characters long, contain an uppercase letter, a lowercase letter, a number and a special character.'
         );
         Object.keys(data).length.should.be.equal(0);
 
@@ -207,7 +207,7 @@ describe('Register User', function () {
         res.body.should.be.an('object');
         res.body.should.have.property('status').to.be.equal(400);
         let { data, message, status } = res.body;
-        message.should.be.equal('Vereiste velden ontbreken');
+        message.should.be.equal('Required fields missing');
         Object.keys(data).length.should.be.equal(0);
 
         done();
@@ -234,7 +234,7 @@ describe('Register User', function () {
         res.body.should.be.an('object');
         res.body.should.have.property('status').to.be.equal(400);
         let { data, message, status } = res.body;
-        message.should.be.equal('Vereiste velden ontbreken');
+        message.should.be.equal('Required fields missing');
         Object.keys(data).length.should.be.equal(0);
 
         done();
@@ -262,7 +262,7 @@ describe('Register User', function () {
         res.body.should.have.property('status').to.be.equal(400);
         let { data, message, status } = res.body;
         message.should.be.equal(
-          'Ongeldig veldtype: lastName moet van het type string zijn, maar het is van het type number.'
+          'Invalid field type: lastName should be of type string, but it is of type number.'
         );
         Object.keys(data).length.should.be.equal(0);
 
@@ -296,7 +296,7 @@ describe('Register User', function () {
         let { data, message, status } = res.body;
 
         message.should.be.equal(
-          `Gebruiker met e-mailadres ${newUser.emailAdress} is geregistreerd`
+          `User with email address ${newUser.emailAdress} is registered`
         );
 
         data.should.have.property('firstName').to.be.equal(newUser.firstName);
@@ -377,7 +377,7 @@ describe('Get User Profile', function () {
           city: 'Amsterdam',
         };
         data.should.be.an('object');
-        message.should.be.equal('Profielgegevens opgehaald');
+        message.should.be.equal('Profile data retrieved');
         data.should.have.property('firstName').to.be.equal(user.firstName);
         data.should.have.property('lastName').to.be.equal(user.lastName);
         data.should.have.property('emailAdress').to.be.equal(user.emailAdress);
@@ -401,7 +401,7 @@ describe('Get User Profile', function () {
         res.body.should.be.an('object');
         res.body.should.have.property('status').to.be.equal(404);
         let { data, message, status } = res.body;
-        message.should.be.equal('Gebruiker niet gevonden');
+        message.should.be.equal('User not found');
         Object.keys(data).length.should.be.equal(0);
         done();
       });
@@ -420,7 +420,7 @@ describe('Get User Profile', function () {
         res.body.should.be.an('object');
         res.body.should.have.property('status').to.be.equal(401);
         let { data, message, status } = res.body;
-        message.should.be.equal('Ongeldig wachtwoord');
+        message.should.be.equal('Invalid password');
         Object.keys(data).length.should.be.equal(0);
         done();
       });
@@ -440,7 +440,7 @@ describe('Get User by ID', function () {
         res.body.should.have.property('message');
         res.body.should.have.property('data');
         let { data, message, status } = res.body;
-        message.should.be.equal('Gebruiker gevonden');
+        message.should.be.equal('User found');
         data.should.have.property('firstName');
         data.should.have.property('lastName');
         data.should.have.property('emailAdress');
@@ -459,7 +459,7 @@ describe('Get User by ID', function () {
         res.body.should.be.an('object');
         res.body.should.have.property('status').to.be.equal(400);
         let { data, message, status } = res.body;
-        message.should.be.equal('Ongeldige gebruikers-ID');
+        message.should.be.equal('Invalid user ID');
         Object.keys(data).length.should.be.equal(0);
 
         done();
@@ -475,7 +475,7 @@ describe('Get User by ID', function () {
         res.body.should.be.an('object');
         res.body.should.have.property('status').to.be.equal(404);
         let { data, message, status } = res.body;
-        message.should.be.equal('Gebruiker niet gevonden');
+        message.should.be.equal('User not found');
         Object.keys(data).length.should.be.equal(0);
 
         done();
