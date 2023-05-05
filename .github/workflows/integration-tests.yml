@@ -9,13 +9,8 @@ jobs:
   integrationtests:
     runs-on: ubuntu-latest
     env:
-<<<<<<< HEAD
-      MYSQL_ROOT_PASSWORD: root
-      DB_HOST: 127.0.0.1
-=======
       MYSQL_ROOT_PASSWORD: root # default root password to use must be 'root'
       DB_HOST: localhost
->>>>>>> develop_branch
       DB_PORT: 3306
       DB_DATABASE: shareameal
       DB_USER: root
@@ -23,75 +18,27 @@ jobs:
     services:
       mysql:
         image: mysql:5.7
-<<<<<<< HEAD
-        env:
-          MYSQL_ROOT_PASSWORD: ${{ env.MYSQL_ROOT_PASSWORD }}
-          MYSQL_DATABASE: ${{ env.DB_DATABASE }}
-          MYSQL_USER: ${{ env.DB_USER }}
-=======
->>>>>>> develop_branch
         ports:
           - 3306
     steps:
       - uses: actions/checkout@v2
 
-<<<<<<< HEAD
-      - name: Setup Node.js environment
-        uses: actions/setup-node@v2
-        with:
-          node-version: 16
-
-      - name: Start MySQL connection from host
-        run: |
-         sudo /etc/init.d/mysql start
-         sudo apt-get install -y mysql-client
-         mysql -uroot -p${{ env.MYSQL_ROOT_PASSWORD }} -e "SHOW DATABASES;"
-         mysql -uroot -p${{ env.MYSQL_ROOT_PASSWORD }} -e "CREATE DATABASE ${{env.DB_DATABASE}};"
-         mysql -uroot -p${{ env.MYSQL_ROOT_PASSWORD }} -e "ALTER USER '${{ env.DB_USER }}'@'localhost' IDENTIFIED WITH mysql_native_password BY '${{ env.DB_PASSWORD }}';"
-=======
       - name: Start MySQL connection from host
         run: |
           sudo /etc/init.d/mysql start
           sudo apt-get install -y mysql-client
           mysql -uroot -p${{ env.MYSQL_ROOT_PASSWORD }} -e "SHOW DATABASES;"
           mysql -uroot -p${{ env.MYSQL_ROOT_PASSWORD }} -e "CREATE DATABASE ${{env.DB_DATABASE}};"
-
->>>>>>> develop_branch
       - name: Import database script
         run: |
           mysql -uroot -p${{env.MYSQL_ROOT_PASSWORD}} ${{env.DB_DATABASE}} < share-a-meal.sql
           mysql -uroot -p${{env.MYSQL_ROOT_PASSWORD}} ${{env.DB_DATABASE}} -e "SHOW TABLES;"
-<<<<<<< HEAD
       - name: npm install
         run: |
           npm install
-      - name: Wait for MySQL service to be ready
-        run: sleep 10
-      - name: npm test
-        run: |
-          npm test -- --DB_PASSWORD=${{ env.DB_PASSWORD }} --DB_USER=${{ env.DB_USER }} --DB_NAME=${{ env.DB_DATABASE }} --DB_HOST=${{ env.DB_HOST }} --DB_PORT=${{ env.DB_PORT }}
-          
-  Railway-deploy:
-    runs-on: ubuntu-latest
-    environment:
-      name: Railway # naam van mijn environment op GitHub
-    steps:
-      - name: Clone repository
-        uses: actions/checkout@v3
-
-      - name: 'Current token'
-        run: |
-          echo "secrets.RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}"
-=======
-
-      - name: npm install
-        run: |
-          npm install
-
       - name: npm test
         run: |
           npm test -- --DB_PASSWORD $MYSQL_ROOT_PASSWORD --DB_USER root --DB_NAME $DB_DATABASE
-
   #   Heroku-deploy:
   #     needs: integrationtests
   #     runs-on: ubuntu-latest
@@ -118,8 +65,6 @@ jobs:
       - name: 'Current token'
         run: |
           echo "secrets.RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}"
-
->>>>>>> develop_branch
       - name: Install Railway
         run: npm i -g @railway/cli
 
