@@ -31,8 +31,61 @@ The server should now be running at `http://localhost:3000` or the port you spec
 ### Server Information
 - `GET /api/info` : Retrieve server information
 ### Users
-- `GET /api/users`: Get all users
-- `GET /api/users/:id`: Get a user by ID
-- `POST /api/users`: Create a new user
-- `PUT /api/users`: Update an existing user based on email address and password
-- `DELETE /api/users`: Delete a user based on email address and password
+- `GET /api/user`: Get all users
+- `GET /api/user/:id`: Get a user by ID
+- `POST /api/user`: Create a new user
+- `PUT /api/user`: Update an existing user based on email address and password
+- `DELETE /api/user`: Delete a user based on email address and password
+
+The following endpoints require a request body:
+
+- `POST /api/user`: Create a new user (fields with an asterisk are required)
+
+````json
+{
+    "firstName": "John", *
+    "lastName": "Doe", *
+    "isActive": 1,
+    "emailAdress": "john.doe@example.com", *
+    "password": "Abcd@123", *
+    "phoneNumber": "",
+    "roles": "",
+    "street": "Main Street 123", *
+    "city": "Amsterdam" *
+}
+````
+- `DELETE /api/user`: Delete a user based on email address and password
+  
+````json
+{
+    "emailAdress": "john.doe76pah@example.com",
+    "password": "Abcde@123"
+}
+
+````
+- `PUT /api/user`: Update an existing user based on email address and password
+
+````json 
+{
+    "emailAdress": "j.doe@server.com",
+    "password": "secret",
+    "updateData": {
+      "firstName": "John", 
+      "lastName": "Doe", 
+      "isActive": 1,
+      "emailAdress": "john.doe@example.com", 
+      "password": "Abcd@123", 
+      "phoneNumber": "",
+      "roles": "",
+      "street": "Main Street 123", 
+      "city": "Amsterdam" *
+    }
+}
+````
+## Deployment
+
+The API server has been deployed and can be accessed at `https://share-a-meal-api-server.up.railway.app`. 
+
+You can use the same endpoints as described in the "API Endpoints" section, just replace `http://localhost:3000` with the deployment URL.
+
+For example, to get all users, you can send a GET request to `https://share-a-meal-api-server.up.railway.app/api/user`.
