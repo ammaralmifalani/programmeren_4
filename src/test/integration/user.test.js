@@ -58,30 +58,6 @@ function cleanupDatabase(done) {
     done(); // Signal that cleanup is complete.
   });
 }
-// describe('User API TEST', function () {
-//   before(function (done) {
-//     // Hook to set up the database connection
-//     connection = dbconnection.getConnection(function (err, conn) {
-//       if (err) throw err; // not connected!
-//       connection = conn;
-//       // Run your CLEAR_DB and INSERT_USER SQL commands here
-//       connection.query(CLEAR_DB + INSERT_USER, function (err) {
-//         if (err) throw err;
-//         done(); // Signal that the setup is complete.
-//       });
-//     });
-//   });
-//   // Hook to clean up after the tests have run
-//   after(function (done) {
-//     // Run your CLEAR_DB SQL command here
-//     connection.query(CLEAR_DB, function (err) {
-//       if (err) throw err;
-//       // Close the connection
-//       connection.end();
-//       done(); // Signal that cleanup is complete.
-//     });
-//   });
-// });
 // Test case UC-201.
 describe('User Registration', function () {
   beforeEach(setupDatabase);
