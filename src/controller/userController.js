@@ -111,11 +111,9 @@ const userController = {
     const fieldTypes = {
       firstName: 'string',
       lastName: 'string',
-      isActive: 'number',
       emailAdress: 'string',
       password: 'string',
       phoneNumber: 'string',
-      roles: 'string',
       street: 'string',
       city: 'string',
     };
@@ -138,27 +136,21 @@ const userController = {
       // Use the connection
       const sql = `
         INSERT INTO user (
-          firstName, lastName, isActive, emailAdress, password,
-          phoneNumber, roles, street, city
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+          firstName, lastName, emailAdress, password,
+          phoneNumber, street, city
+        ) VALUES ( ?, ?, ?, ?, ?, ?, ?)
       `;
       const values = [
         newUser.firstName,
         newUser.lastName,
-        newUser.isActive || 0,
         newUser.emailAdress,
         newUser.password,
         newUser.phoneNumber || '',
-        newUser.roles || '',
         newUser.street,
         newUser.city,
       ];
-
       connection.query(sql, values, function (error, results, fields) {
         // When done with the connection, release it.
-        connection.release();
-
-        // Handle error after the release.
         if (error) {
           if (error.code === 'ER_DUP_ENTRY') {
             // Send a custom error message to the user
@@ -168,21 +160,33 @@ const userController = {
               data: {},
             });
           } else {
-            // Send the original error message if it is another error has been returned to the pool.
+            // Send the original error message if it is another error
             logger.info('#affectedRows= ', results.affectedRows);
             throw error;
           }
         } else {
-          // Don't use the connection here, it has
           let user_id = results.insertId;
-          res.status(201).json({
-            status: 201,
-            message: `User with email address ${newUser.emailAdress} is registered`,
-            data: {
-              id: user_id,
-              ...req.body,
-            },
-          });
+
+          // New SQL query to fetch the user data from the database
+          const fetchSql = 'SELECT * FROM user WHERE id = ?';
+          connection.query(
+            fetchSql,
+            [user_id],
+            function (fetchError, fetchResults, fetchFields) {
+              // Release the connection
+              connection.release();
+
+              // Handle error after the release
+              if (fetchError) throw fetchError;
+
+              // Send the fetched user data to the client
+              res.status(201).json({
+                status: 201,
+                message: `User with email address ${newUser.emailAdress} is registered`,
+                data: fetchResults[0], // assuming the query returns an array
+              });
+            }
+          );
         }
       });
     });
@@ -190,12 +194,9 @@ const userController = {
   // deleteUser deletes a user from the database based on their email and password
   deleteUser: (req, res, next) => {
     logger.info('Deleting user');
-
     let sqlStatement = 'SELECT * FROM `user` WHERE  emailAdress=?';
     let emailAdress = req.body.emailAdress;
-    let password = req.body.password;
     logger.info('emailAddress =', emailAdress);
-    logger.info('password =', password);
     dbconnection.getConnection(function (err, conn) {
       if (err) {
         console.log('error', err);
@@ -212,50 +213,42 @@ const userController = {
                 status: 409,
                 message: err.message,
               });
+              return;
             }
             if (results.length === 0) {
               logger.error('Email address is incorrect');
-              res.status(401).json({
-                status: 401,
-                message: 'Email address is incorrect',
+              res.status(404).json({
+                status: 404,
+                message: 'user not found',
                 data: {},
               });
+              return;
             }
-            if (results.length > 0) {
-              if (results[0].password !== password) {
-                logger.error('Password is incorrect');
-                res.status(401).json({
-                  status: 401,
-                  message: 'Password is incorrect',
-                  data: {},
-                });
+
+            let deletedUser = results[0];
+            sqlStatement = 'DELETE FROM `user` WHERE  emailAdress=?';
+            conn.query(
+              sqlStatement,
+              [emailAdress],
+              function (err, results, fields) {
+                if (err) {
+                  logger.error(err.message);
+                  next({
+                    status: 409,
+                    message: err.message,
+                  });
+                  return;
+                }
+                if (results) {
+                  logger.info('Deleted user with emailAdress', emailAdress);
+                  res.status(200).json({
+                    status: 200,
+                    message: 'User deleted successfully',
+                    data: deletedUser,
+                  });
+                }
               }
-              if (results[0].password === password) {
-                let deletedUser = results[0];
-                sqlStatement = 'DELETE FROM `user` WHERE  emailAdress=?';
-                conn.query(
-                  sqlStatement,
-                  [emailAdress],
-                  function (err, results, fields) {
-                    if (err) {
-                      logger.error(err.message);
-                      next({
-                        status: 409,
-                        message: err.message,
-                      });
-                    }
-                    if (results) {
-                      logger.info('Deleted user with emailAdress', emailAdress);
-                      res.status(200).json({
-                        status: 200,
-                        message: 'User deleted successfully',
-                        data: deletedUser,
-                      });
-                    }
-                  }
-                );
-              }
-            }
+            );
           }
         );
         dbconnection.releaseConnection(conn);
@@ -264,7 +257,7 @@ const userController = {
   },
   // updateUser updates a user's information in the database based on their email and password
   updateUser: (req, res) => {
-    const { emailAdress, password, updateData } = req.body;
+    const { emailAdress, updateData } = req.body;
     console.log('Request body:', req.body);
 
     dbconnection.getConnection((err, connection) => {
@@ -276,7 +269,7 @@ const userController = {
           connection.release();
           throw error;
         }
-        console.log('Query result:', results);
+        logger.debug('Query result:', results);
 
         if (results.length === 0) {
           connection.release();
@@ -288,15 +281,6 @@ const userController = {
         }
 
         const user = results[0];
-        if (user.password !== password) {
-          connection.release();
-          return res.status(401).json({
-            status: 401,
-            message: 'Invalid password',
-            data: {},
-          });
-        }
-
         const { firstName, lastName, street, city, newPassword, phoneNumber } =
           updateData;
 
@@ -402,12 +386,12 @@ const userController = {
   },
   // getUserProfile retrieves a user's profile information based on their email and password
   getUserProfile: (req, res) => {
-    const { emailAdress, password } = req.body;
+    const emailAdress = req.body.emailAdress;
 
-    if (typeof emailAdress !== 'string' || typeof password !== 'string') {
+    if (!fun.validateEmail(emailAdress)) {
       return res.status(400).json({
         status: 400,
-        message: 'Email address and password must be a string',
+        message: 'Email address not valid',
         data: {},
       });
     }
@@ -432,30 +416,20 @@ const userController = {
             });
           } else {
             const user = userResults[0];
-
-            if (user.password !== password) {
-              res.status(401).json({
-                status: 401,
-                message: 'Invalid password',
-                data: {},
-              });
-            } else {
-              const userDetails = {
-                firstName: user.firstName,
-                lastName: user.lastName,
-                emailAdress: user.emailAdress,
-                password: user.password,
-                street: user.street,
-                city: user.city,
-                phoneNumber: user.phoneNumber,
-              };
-
-              res.status(200).json({
-                status: 200,
-                message: 'Profile data retrieved',
-                data: userDetails,
-              });
-            }
+            const userDetails = {
+              firstName: user.firstName,
+              lastName: user.lastName,
+              emailAdress: user.emailAdress,
+              password: user.password,
+              street: user.street,
+              city: user.city,
+              phoneNumber: user.phoneNumber,
+            };
+            res.status(200).json({
+              status: 200,
+              message: 'Profile data retrieved',
+              data: userDetails,
+            });
           }
         }
       );

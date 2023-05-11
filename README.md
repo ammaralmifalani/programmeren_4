@@ -34,8 +34,8 @@ The server should now be running at `http://localhost:3000` or the port you spec
 - `GET /api/user`: Get all users
 - `GET /api/user/:id`: Get a user by ID
 - `POST /api/user`: Create a new user
-- `PUT /api/user`: Update an existing user based on email address and password
-- `DELETE /api/user`: Delete a user based on email address and password
+- `PUT /api/user`: Update an existing user based on email address 
+- `DELETE /api/user`: Delete a user based on email address
 
 The following endpoints require a request body:
 
@@ -45,30 +45,27 @@ The following endpoints require a request body:
 {
     "firstName": "John", *
     "lastName": "Doe", *
-    "isActive": 1,
     "emailAdress": "john.doe@example.com", *
     "password": "Abcd@123", *
-    "phoneNumber": "",
-    "roles": "",
+    "phoneNumber": "",|| "0684584855"
     "street": "Main Street 123", *
     "city": "Amsterdam" *
 }
 ````
-- `DELETE /api/user`: Delete a user based on email address and password
+- `DELETE /api/user`: Delete a user based on email address
   
 ````json
 {
     "emailAdress": "john.doe76pah@example.com",
-    "password": "Abcde@123"
+
 }
 
 ````
-- `PUT /api/user`: Update an existing user based on email address and password
+- `PUT /api/user`: Update an existing user based on email address 
 
 ````json 
 {
     "emailAdress": "j.doe@server.com",
-    "password": "secret",
     "updateData": {
       "firstName": "John", 
       "lastName": "Doe", 

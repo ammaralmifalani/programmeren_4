@@ -31,6 +31,35 @@ app.get('/api/info', (req, res) => {
 // Refer to routes defined in userRouter
 app.use('/api/user', userRouter);
 
+// app.get('api/user', (req, res) => {
+//   const queryField = Object.entries(req.query);
+//   if (queryField.length == 2) {
+//     logger.info(
+//       'Dit is field 1 = ' + queryField[0][0] + ' = ' + queryField[0][1]
+//     );
+//     res.status(200).json({
+//       status: 200,
+//       message: 'gefilterd op 2 parameters',
+//       data: {},
+//     });
+//   } else if (queryField.length == 1) {
+//     res.status(200).json({
+//       status: 200,
+//       message: 'gefilterd op 1 parameters',
+//       data: {},
+//     });
+
+//   } else {
+//     res.status(200).json({
+//       status: 200,
+//       message: 'get all users',
+//       data: {},
+//     });
+//   }
+
+//   // const field1 = req.query.firstName;
+//   // const field2 = req.query.isActive;
+// });
 // Route: welcome message
 app.get('/', (req, res) => {
   res.send('welcome to server API van de share a meal');
