@@ -66,30 +66,29 @@ const userController = {
     if (!fun.validateEmail(newUser.emailAdress)) {
       return res.status(400).json({
         status: 400,
-        message: 'Ongeldig e-mailadres',
+        message: 'Invalid email address',
         data: {},
       });
     }
 
-    // Validatie van telefoonnummer
+    // Validation of phone number
     if (newUser.phoneNumber) {
       if (!fun.validatePhoneNumber(newUser.phoneNumber)) {
         return res.status(400).json({
           status: 400,
-          message:
-            'Ongeldig telefoonnummer. Het telefoonnummer moet 10 cijfers lang zijn.',
+          message: 'Invalid phone number. Phone number must be 10 digits long.',
           data: {},
         });
       }
     }
 
-    // Validatie van wachtwoord
+    // Validation of password
 
     if (!fun.validatePassword(newUser.password)) {
       return res.status(400).json({
         status: 400,
         message:
-          'Ongeldig wachtwoord. Het wachtwoord moet minstens 8 tekens lang zijn, een hoofdletter, een kleine letter, een cijfer en een speciaal teken bevatten.',
+          'Invalid password. The password must be at least 8 characters long, contain an uppercase letter, a lowercase letter, a number and a special character.',
         data: {},
       });
     }
@@ -104,11 +103,11 @@ const userController = {
     ) {
       return res.status(400).json({
         status: 400,
-        message: 'Vereiste velden ontbreken',
+        message: 'Required fields missing',
         data: {},
       });
     }
-    // Valideer de types van de velden
+    // Validate the types of fields
     const fieldTypes = {
       firstName: 'string',
       lastName: 'string',
@@ -128,7 +127,7 @@ const userController = {
       if (actualType !== expectedType) {
         return res.status(400).json({
           status: 400,
-          message: `Ongeldig veldtype: ${field} moet van het type ${expectedType} zijn, maar het is van het type ${actualType}.`,
+          message: `Invalid field type: ${field} should be of type ${expectedType}, but it is of type ${actualType}.`,
           data: {},
         });
       }
@@ -162,14 +161,14 @@ const userController = {
         // Handle error after the release.
         if (error) {
           if (error.code === 'ER_DUP_ENTRY') {
-            // Stuur een aangepaste foutmelding naar de gebruiker
+            // Send a custom error message to the user
             res.status(409).json({
               status: 409,
-              message: 'Er bestaat al een gebruiker met dit e-mailadres.',
+              message: 'A user already exists with this email address.',
               data: {},
             });
           } else {
-            // Stuur de oorspronkelijke foutmelding als het een andere fout is been returned to the pool.
+            // Send the original error message if it is another error has been returned to the pool.
             logger.info('#affectedRows= ', results.affectedRows);
             throw error;
           }
@@ -178,7 +177,7 @@ const userController = {
           let user_id = results.insertId;
           res.status(201).json({
             status: 201,
-            message: `Gebruiker met e-mailadres ${newUser.emailAdress} is geregistreerd`,
+            message: `User with email address ${newUser.emailAdress} is registered`,
             data: {
               id: user_id,
               ...req.body,
@@ -408,7 +407,7 @@ const userController = {
     if (typeof emailAdress !== 'string' || typeof password !== 'string') {
       return res.status(400).json({
         status: 400,
-        message: 'E-mailadres en wachtwoord moeten een tekenreeks zijn',
+        message: 'Email address and password must be a string',
         data: {},
       });
     }
@@ -428,7 +427,7 @@ const userController = {
           if (userResults.length === 0) {
             res.status(404).json({
               status: 404,
-              message: 'Gebruiker niet gevonden',
+              message: 'User not found',
               data: {},
             });
           } else {
@@ -437,7 +436,7 @@ const userController = {
             if (user.password !== password) {
               res.status(401).json({
                 status: 401,
-                message: 'Ongeldig wachtwoord',
+                message: 'Invalid password',
                 data: {},
               });
             } else {
@@ -448,12 +447,12 @@ const userController = {
                 password: user.password,
                 street: user.street,
                 city: user.city,
-                phonenumber: user.phonenumber,
+                phoneNumber: user.phoneNumber,
               };
 
               res.status(200).json({
                 status: 200,
-                message: 'Profielgegevens opgehaald',
+                message: 'Profile data retrieved',
                 data: userDetails,
               });
             }
@@ -469,7 +468,7 @@ const userController = {
     if (isNaN(id)) {
       return res.status(400).json({
         status: 400,
-        message: 'Ongeldige gebruikers-ID',
+        message: 'Invalid user ID',
         data: {},
       });
     }
@@ -488,7 +487,7 @@ const userController = {
           connection.release();
           res.status(404).json({
             status: 404,
-            message: 'Gebruiker niet gevonden',
+            message: 'User not found',
             data: {},
           });
         } else {
@@ -523,35 +522,13 @@ const userController = {
 
               res.status(200).json({
                 status: 200,
-                message: 'Gebruiker gevonden',
+                message: 'User found',
                 data: userData,
               });
             }
           );
         }
       });
-    });
-  },
-  // getTableLength retrieves the length of a table from the database
-  getTableLength: (tableName, callback) => {
-    dbconnection.getConnection((err, connection) => {
-      if (err) throw err; // not connected!
-
-      // Use the connection
-      connection.query(
-        `SELECT COUNT(*) as count FROM ${tableName}`,
-        (error, results, fields) => {
-          // When done with the connection, release it.
-          connection.release();
-          // Handle error after the release.
-          if (error) throw error;
-
-          // Don't use the connection here, it has been returned to the pool.
-          const tableLength = results[0].count;
-
-          callback(null, tableLength);
-        }
-      );
     });
   },
   // loginUser logs in a user based on their email address and password
@@ -586,6 +563,28 @@ const userController = {
       status: 200,
       message: 'Gebruiker is met succes ingelogd',
       data: {},
+    });
+  },
+  // getTableLength retrieves the length of a table from the database
+  getTableLength: (tableName, callback) => {
+    dbconnection.getConnection((err, connection) => {
+      if (err) throw err; // not connected!
+
+      // Use the connection
+      connection.query(
+        `SELECT COUNT(*) as count FROM ${tableName}`,
+        (error, results, fields) => {
+          // When done with the connection, release it.
+          connection.release();
+          // Handle error after the release.
+          if (error) throw error;
+
+          // Don't use the connection here, it has been returned to the pool.
+          const tableLength = results[0].count;
+
+          callback(null, tableLength);
+        }
+      );
     });
   },
 };

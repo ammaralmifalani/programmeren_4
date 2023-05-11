@@ -84,7 +84,7 @@ describe('Register User', function () {
         let { data, message, status } = res.body;
 
         message.should.be.equal(
-          `Gebruiker met e-mailadres ${newUser.emailAdress} is geregistreerd`
+          `User with email address ${newUser.emailAdress} is registered`
         );
 
         data.should.have.property('firstName').to.be.equal(newUser.firstName);
@@ -122,14 +122,14 @@ describe('Register User', function () {
         res.body.should.be.an('object');
         res.body.should.have.property('status').to.be.equal(400);
         let { data, message, status } = res.body;
-        message.should.be.equal('Ongeldig e-mailadres');
+        message.should.be.equal('Invalid email address');
         Object.keys(data).length.should.be.equal(0);
 
         done();
       });
   });
 
-  it('TC-201-3 should return an error if phonenumber is invalid', (done) => {
+  it('TC-201-3 should return an error if phoneNumber is invalid', (done) => {
     const newUser = {
       firstName: 'testFirstName',
       lastName: 'testLastName',
@@ -150,7 +150,7 @@ describe('Register User', function () {
         res.body.should.have.property('status').to.be.equal(400);
         let { data, message, status } = res.body;
         message.should.be.equal(
-          'Ongeldig telefoonnummer. Het telefoonnummer moet 10 cijfers lang zijn.'
+          'Invalid phone number. Phone number must be 10 digits long.'
         );
         Object.keys(data).length.should.be.equal(0);
 
@@ -179,7 +179,7 @@ describe('Register User', function () {
         res.body.should.have.property('status').to.be.equal(400);
         let { data, message, status } = res.body;
         message.should.be.equal(
-          'Ongeldig wachtwoord. Het wachtwoord moet minstens 8 tekens lang zijn, een hoofdletter, een kleine letter, een cijfer en een speciaal teken bevatten.'
+          'Invalid password. The password must be at least 8 characters long, contain an uppercase letter, a lowercase letter, a number and a special character.'
         );
         Object.keys(data).length.should.be.equal(0);
 
@@ -207,7 +207,7 @@ describe('Register User', function () {
         res.body.should.be.an('object');
         res.body.should.have.property('status').to.be.equal(400);
         let { data, message, status } = res.body;
-        message.should.be.equal('Vereiste velden ontbreken');
+        message.should.be.equal('Required fields missing');
         Object.keys(data).length.should.be.equal(0);
 
         done();
@@ -234,7 +234,7 @@ describe('Register User', function () {
         res.body.should.be.an('object');
         res.body.should.have.property('status').to.be.equal(400);
         let { data, message, status } = res.body;
-        message.should.be.equal('Vereiste velden ontbreken');
+        message.should.be.equal('Required fields missing');
         Object.keys(data).length.should.be.equal(0);
 
         done();
@@ -262,7 +262,7 @@ describe('Register User', function () {
         res.body.should.have.property('status').to.be.equal(400);
         let { data, message, status } = res.body;
         message.should.be.equal(
-          'Ongeldig veldtype: lastName moet van het type string zijn, maar het is van het type number.'
+          'Invalid field type: lastName should be of type string, but it is of type number.'
         );
         Object.keys(data).length.should.be.equal(0);
 
@@ -296,7 +296,7 @@ describe('Register User', function () {
         let { data, message, status } = res.body;
 
         message.should.be.equal(
-          `Gebruiker met e-mailadres ${newUser.emailAdress} is geregistreerd`
+          `User with email address ${newUser.emailAdress} is registered`
         );
 
         data.should.have.property('firstName').to.be.equal(newUser.firstName);
@@ -343,10 +343,16 @@ describe('Get All Users', function () {
 });
 // Test case UC-203
 describe('Get User Profile', function () {
+  beforeEach(function (done) {
+    createTestUser(done);
+  });
+  afterEach(function (done) {
+    deleteTestUser(done);
+  });
   it('TC-203-1 should return user profile data', (done) => {
     const credentials = {
-      emailAdress: 'john.doe@example.com',
-      password: 'Abcd@123',
+      emailAdress: 'testEmail@test.com',
+      password: 'Test@123',
     };
     chai
       .request(app)
@@ -360,15 +366,18 @@ describe('Get User Profile', function () {
         res.body.should.have.property('data');
         let { data, message, status } = res.body;
         const user = {
-          firstName: 'John',
-          lastName: 'Doe',
+          firstName: 'testFirstName',
+          lastName: 'testLastName',
           emailAdress: credentials.emailAdress,
           password: credentials.password,
+          isActive: 1,
+          phoneNumber: '0612345678',
+          roles: '',
           street: 'Main Street 123',
           city: 'Amsterdam',
         };
         data.should.be.an('object');
-        message.should.be.equal('Profielgegevens opgehaald');
+        message.should.be.equal('Profile data retrieved');
         data.should.have.property('firstName').to.be.equal(user.firstName);
         data.should.have.property('lastName').to.be.equal(user.lastName);
         data.should.have.property('emailAdress').to.be.equal(user.emailAdress);
@@ -392,7 +401,7 @@ describe('Get User Profile', function () {
         res.body.should.be.an('object');
         res.body.should.have.property('status').to.be.equal(404);
         let { data, message, status } = res.body;
-        message.should.be.equal('Gebruiker niet gevonden');
+        message.should.be.equal('User not found');
         Object.keys(data).length.should.be.equal(0);
         done();
       });
@@ -400,7 +409,7 @@ describe('Get User Profile', function () {
 
   it('TC-203-3 should return error if password is incorrect', (done) => {
     const credentials = {
-      emailAdress: 'john.doe@example.com',
+      emailAdress: 'j.doe@server.com',
       password: 'IncorrectPassword!',
     };
     chai
@@ -411,7 +420,7 @@ describe('Get User Profile', function () {
         res.body.should.be.an('object');
         res.body.should.have.property('status').to.be.equal(401);
         let { data, message, status } = res.body;
-        message.should.be.equal('Ongeldig wachtwoord');
+        message.should.be.equal('Invalid password');
         Object.keys(data).length.should.be.equal(0);
         done();
       });
@@ -431,7 +440,7 @@ describe('Get User by ID', function () {
         res.body.should.have.property('message');
         res.body.should.have.property('data');
         let { data, message, status } = res.body;
-        message.should.be.equal('Gebruiker gevonden');
+        message.should.be.equal('User found');
         data.should.have.property('firstName');
         data.should.have.property('lastName');
         data.should.have.property('emailAdress');
@@ -450,7 +459,7 @@ describe('Get User by ID', function () {
         res.body.should.be.an('object');
         res.body.should.have.property('status').to.be.equal(400);
         let { data, message, status } = res.body;
-        message.should.be.equal('Ongeldige gebruikers-ID');
+        message.should.be.equal('Invalid user ID');
         Object.keys(data).length.should.be.equal(0);
 
         done();
@@ -466,7 +475,7 @@ describe('Get User by ID', function () {
         res.body.should.be.an('object');
         res.body.should.have.property('status').to.be.equal(404);
         let { data, message, status } = res.body;
-        message.should.be.equal('Gebruiker niet gevonden');
+        message.should.be.equal('User not found');
         Object.keys(data).length.should.be.equal(0);
 
         done();
@@ -475,18 +484,27 @@ describe('Get User by ID', function () {
 });
 // Test case  UC-205
 describe('Update User', function () {
+  beforeEach(function (done) {
+    createTestUser(done);
+  });
+  afterEach(function (done) {
+    deleteTestUser(done);
+  });
   // User updated successfully
   it('TC-205-1 should update user data', (done) => {
     const requestData = {
-      emailAdress: 'john.doe@example.com',
-      password: 'Abcd@123',
+      emailAdress: 'testEmail@test.com',
+      password: 'Test@123',
       updateData: {
-        firstName: 'John',
-        lastName: 'Doe',
+        firstName: 'testFirstName',
+        lastName: 'testLastName',
+        isActive: 1,
+        emailAdress: 'testEmail@test.com',
+        newPassword: 'Test@123',
+        phoneNumber: '0612345678',
+        roles: '',
         street: 'Main Street 123',
         city: 'Amsterdam',
-        newPassword: 'Abcd@123',
-        phoneNumber: '0698765432',
       },
     };
 
@@ -551,8 +569,8 @@ describe('Update User', function () {
   // Invalid password
   it('TC-205-3 should return error if password is incorrect', (done) => {
     const requestData = {
-      emailAdress: 'john.doe@example.com',
-      password: 'IncorrectPassword!',
+      emailAdress: 'testEmail@test.com',
+      password: 'incorrectPassword!',
       updateData: {
         firstName: 'UpdatedAmmar',
       },
@@ -574,8 +592,8 @@ describe('Update User', function () {
   // Invalid firstName test
   it('TC-205-4 should return error if firstName is not a string', (done) => {
     const requestData = {
-      emailAdress: 'john.doe@example.com',
-      password: 'Abcd@123',
+      emailAdress: 'testEmail@test.com',
+      password: 'Test@123',
       updateData: {
         firstName: 123,
       },
@@ -598,8 +616,8 @@ describe('Update User', function () {
   // Invalid lastName test
   it('TC-205-5 should return error if lastName is not a string', (done) => {
     const requestData = {
-      emailAdress: 'john.doe@example.com',
-      password: 'Abcd@123',
+      emailAdress: 'testEmail@test.com',
+      password: 'Test@123',
       updateData: {
         lastName: 456,
       },
@@ -622,8 +640,8 @@ describe('Update User', function () {
   // Invalid street test
   it('TC-205-6 should return error if street is not a string', (done) => {
     const requestData = {
-      emailAdress: 'john.doe@example.com',
-      password: 'Abcd@123',
+      emailAdress: 'testEmail@test.com',
+      password: 'Test@123',
       updateData: {
         street: 789,
       },
@@ -646,8 +664,8 @@ describe('Update User', function () {
   // Invalid city test
   it('TC-205-7 should return error if city is not a string', (done) => {
     const requestData = {
-      emailAdress: 'john.doe@example.com',
-      password: 'Abcd@123',
+      emailAdress: 'testEmail@test.com',
+      password: 'Test@123',
       updateData: {
         city: 101112,
       },
@@ -670,8 +688,8 @@ describe('Update User', function () {
   // Invalid phoneNumber test
   it('TC-205-8 should return error if phoneNumber is invalid', (done) => {
     const requestData = {
-      emailAdress: 'john.doe@example.com',
-      password: 'Abcd@123',
+      emailAdress: 'testEmail@test.com',
+      password: 'Test@123',
       updateData: {
         phoneNumber: '123456789',
       },
@@ -695,8 +713,8 @@ describe('Update User', function () {
   // Invalid newPassword test
   it('TC-205-9 should return error if newPassword is invalid', (done) => {
     const requestData = {
-      emailAdress: 'john.doe@example.com',
-      password: 'Abcd@123',
+      emailAdress: 'testEmail@test.com',
+      password: 'Test@123',
       updateData: {
         newPassword: 'invalidpassword',
       },
@@ -721,8 +739,8 @@ describe('Update User', function () {
   // Update phoneNumber to empty
   it('TC-205-10 should update phoneNumber to empty', (done) => {
     const requestData = {
-      emailAdress: 'john.doe@example.com',
-      password: 'Abcd@123',
+      emailAdress: 'testEmail@test.com',
+      password: 'Test@123',
       updateData: {
         phoneNumber: '',
       },

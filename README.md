@@ -1,41 +1,91 @@
 # Share-a-Meal API Server
-
-Dit is de API-server voor het Share-a-Meal project. Share-a-Meal is een platform waar gebruikers maaltijden kunnen delen met anderen in hun omgeving. Deze server is gebouwd met Node.js en Express en maakt gebruik van MySQL voor de database.
-
-## Vereisten
-
+## Introduction
+This is the API server for the Share-a-Meal project. Share-a-Meal is a platform where users can share meals with others in their local area. This server is built with Node.js and Express and uses MySQL for the database.
+## Requirements
 - Node.js
 - MySQL
+## Installation
+### Step 1: Clone the Repository
 
-## Installatie
+`git clone https://github.com/ammaralmifalani/shareameal_api_server.git`
+### Step 2: Install Dependencies
+Navigate to the project folder and install the required packages:
+- `cd share_a_meal_server`
+- `npm install` 
+### Step 3: Import Database Structure
+Create a new MySQL database for your project and import the share-a-meal.sql file to set up the necessary tables and structures:
+- mysql -u <your_database_user> -p <your_database_name> < share-a-meal.sql
+### Step 4: Configure Environment Variables
+Create a `.env` file in the root folder of the project and add the following variables, using your own values:
+- DB_HOST=<your_database_host>
+- DB_PORT=<your_database_port>
+- DB_USER=<your_database_user>
+- DB_PASSWORD=<your_database_password>
+- DB_DATABASE=<your_database_name>
+### Step 5: Start the API Server
 
-1. Clone deze repository:
+`npm start`
 
-git clone <>
-
-2. Navigeer naar de projectmap en installeer de vereiste pakketten:
-
-cd share_a_meal_server
-npm install
-
-3. Maak een `.env`-bestand aan in de hoofdmap van het project en voeg de volgende variabelen toe, met je eigen waarden:
-
-DB_HOST=<your_database_host>
-DB_PORT=<your_database_port>
-DB_USER=<your_database_user>
-DB_PASSWORD=<your_database_password>
-DB_DATABASE=<your_database_name>
-
-4. Start de API-server:
-
-npm start
-
-De server moet nu draaien op `http://localhost:3000` of de poort die je hebt opgegeven in je `.env`-bestand.
-
+The server should now be running at `http://localhost:3000` or the port you specified in your `.env` file.
 ## API Endpoints
+### Server Information
+- `GET /api/info` : Retrieve server information
+### Users
+- `GET /api/user`: Get all users
+- `GET /api/user/:id`: Get a user by ID
+- `POST /api/user`: Create a new user
+- `PUT /api/user`: Update an existing user based on email address and password
+- `DELETE /api/user`: Delete a user based on email address and password
 
-- `GET /api/users`: Haal alle gebruikers op
-- `GET /api/users/:id`: Haal een gebruiker op op basis van ID
-- `POST /api/users`: Maak een nieuwe gebruiker aan
-- `PUT /api/users`: Werk een bestaande gebruiker bij op basis van e-mailadres en password
-- `DELETE /api/users`: Verwijder een gebruiker op basis van e-mailadres en password
+The following endpoints require a request body:
+
+- `POST /api/user`: Create a new user (fields with an asterisk are required)
+
+````json
+{
+    "firstName": "John", *
+    "lastName": "Doe", *
+    "isActive": 1,
+    "emailAdress": "john.doe@example.com", *
+    "password": "Abcd@123", *
+    "phoneNumber": "",
+    "roles": "",
+    "street": "Main Street 123", *
+    "city": "Amsterdam" *
+}
+````
+- `DELETE /api/user`: Delete a user based on email address and password
+  
+````json
+{
+    "emailAdress": "john.doe76pah@example.com",
+    "password": "Abcde@123"
+}
+
+````
+- `PUT /api/user`: Update an existing user based on email address and password
+
+````json 
+{
+    "emailAdress": "j.doe@server.com",
+    "password": "secret",
+    "updateData": {
+      "firstName": "John", 
+      "lastName": "Doe", 
+      "isActive": 1,
+      "emailAdress": "john.doe@example.com", 
+      "password": "Abcd@123", 
+      "phoneNumber": "",
+      "roles": "",
+      "street": "Main Street 123", 
+      "city": "Amsterdam" *
+    }
+}
+````
+## Deployment
+
+The API server has been deployed and can be accessed at `https://share-a-meal-api-server.up.railway.app`. 
+
+You can use the same endpoints as described in the "API Endpoints" section, just replace `http://localhost:3000` with the deployment URL.
+
+For example, to get all users, you can send a GET request to `https://share-a-meal-api-server.up.railway.app/api/user`.

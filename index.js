@@ -15,7 +15,6 @@ app.use('*', (req, res, next) => {
   logger.trace(`methode ${method} is aangeroepen for URL: ${url}`);
   next();
 });
-
 // Define a route for server info
 app.get('/api/info', (req, res) => {
   res.status(200).json({
@@ -32,13 +31,27 @@ app.get('/api/info', (req, res) => {
 // Refer to routes defined in userRouter
 app.use('/api/user', userRouter);
 
+// Route: welcome message
+app.get('/', (req, res) => {
+  res.send('welcome to server API van de share a meal');
+});
+
 // Catch all other routes that do not match any endpoints
-app.use((req, res, next) => {
-  const url = req.originalUrl;
+app.use('*', (req, res) => {
   logger.warn('Invalid endpoint called: ', req.path);
   res.status(404).json({
     status: 404,
     message: 'Endpoint not found',
+    data: {},
+  });
+});
+
+// Express error handler
+app.use((err, req, res, next) => {
+  logger.error(err.code, err.message);
+  res.status(err.code).json({
+    statusCode: err.code,
+    message: err.message,
     data: {},
   });
 });

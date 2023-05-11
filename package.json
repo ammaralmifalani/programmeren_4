@@ -1,5 +1,5 @@
 {
-  "name": "voorbeeld_les_2",
+  "name": "share-a-meal-server",
   "version": "1.0.0",
   "description": "express server",
   "main": "index.js",
@@ -15,6 +15,7 @@
     "express": "^4.18.2",
     "jsonwebtoken": "^9.0.0",
     "mysql": "^2.18.1",
+    "mysql2": "^3.2.4",
     "tracer": "^1.1.6",
     "uuid": "^9.0.0"
   },
