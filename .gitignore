@@ -1,3 +1,4 @@
 node_modules/
 .env
 todo_list.txt
+.env.test

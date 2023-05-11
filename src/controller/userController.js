@@ -451,7 +451,7 @@ const userController = {
       if (err) throw err;
 
       const userSql =
-        'SELECT firstName, lastName, emailAdress, phoneNumber FROM user WHERE id = ?';
+        'SELECT firstName, lastName, emailAdress, phoneNumber,roles,isActive FROM user WHERE id = ?';
       const mealSql = 'SELECT * FROM meal WHERE CookID = ?';
 
       connection.query(userSql, [id], function (error, userResults, fields) {

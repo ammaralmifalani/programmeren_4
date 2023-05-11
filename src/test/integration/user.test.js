@@ -2,13 +2,9 @@ const assert = require('assert');
 const chai = require('chai');
 const chaiHttp = require('chai-http');
 const app = require('../../../index');
-// const { database, meal_database } = require('../../database/inmemdb');
 const dbconnection = require('../../database/dbconnection');
 const { getTableLength } = require('../../controller/userController');
-const userController = require('../../controller/userController');
-// let index = database.users.length;
 const logger = require('../utils/utils').logger;
-const fun = require('../../controller/function');
 require('tracer').setLevel('debug');
 chai.should();
 chai.use(chaiHttp);
@@ -43,32 +39,53 @@ const INSERT_MEALS =
   "(2, 'Meal B', 'description', 'image url', NOW(), 5, 6.50, 2);";
 // A global variable to keep the connection
 let connection;
-
-describe('Register User', function () {
-  before(function (done) {
-    // Hook to set up the database connection
-    connection = dbconnection.getConnection(function (err, conn) {
-      if (err) throw err; // not connected!
-      connection = conn;
-      // Run your CLEAR_DB and INSERT_USER SQL commands here
-      connection.query(CLEAR_DB + INSERT_USER, function (err) {
-        if (err) throw err;
-        done(); // Signal that the setup is complete.
-      });
-    });
-  });
-  // Hook to clean up after the tests have run
-  after(function (done) {
-    // Run your CLEAR_DB SQL command here
-    connection.query(CLEAR_DB, function (err) {
+function setupDatabase(done) {
+  connection = dbconnection.getConnection(function (err, conn) {
+    if (err) throw err; // not connected!
+    connection = conn;
+    // Run your CLEAR_DB and INSERT_USER SQL commands here
+    connection.query(CLEAR_DB + INSERT_USER, function (err) {
       if (err) throw err;
-      // Close the connection
-      connection.end();
-      done(); // Signal that cleanup is complete.
+      done(); // Signal that the setup is complete.
     });
   });
-
-  // Test case UC-201.
+}
+function cleanupDatabase(done) {
+  connection.query(CLEAR_DB, function (err) {
+    if (err) throw err;
+    // Close the connection
+    connection.end();
+    done(); // Signal that cleanup is complete.
+  });
+}
+// describe('User API TEST', function () {
+//   before(function (done) {
+//     // Hook to set up the database connection
+//     connection = dbconnection.getConnection(function (err, conn) {
+//       if (err) throw err; // not connected!
+//       connection = conn;
+//       // Run your CLEAR_DB and INSERT_USER SQL commands here
+//       connection.query(CLEAR_DB + INSERT_USER, function (err) {
+//         if (err) throw err;
+//         done(); // Signal that the setup is complete.
+//       });
+//     });
+//   });
+//   // Hook to clean up after the tests have run
+//   after(function (done) {
+//     // Run your CLEAR_DB SQL command here
+//     connection.query(CLEAR_DB, function (err) {
+//       if (err) throw err;
+//       // Close the connection
+//       connection.end();
+//       done(); // Signal that cleanup is complete.
+//     });
+//   });
+// });
+// Test case UC-201.
+describe('User Registration', function () {
+  beforeEach(setupDatabase);
+  afterEach(cleanupDatabase);
   it('TC-201-1 should return an error if any field is missing', (done) => {
     const newUser = {
       firstName: 'testFirstName',
@@ -286,7 +303,11 @@ describe('Register User', function () {
         done();
       });
   });
-  // Test case UC-202
+});
+// Test case UC-202
+describe('Get All Users', function () {
+  beforeEach(setupDatabase);
+  afterEach(cleanupDatabase);
   it('TC-202-1 should return all users in the database', (done) => {
     chai
       .request(app)
@@ -311,7 +332,11 @@ describe('Register User', function () {
         });
       });
   });
-  // Test case UC-203
+});
+// Test case UC-203 User Profile'
+describe('User Profile', function () {
+  beforeEach(setupDatabase);
+  afterEach(cleanupDatabase);
   it('TC-203-1 should return user profile data', (done) => {
     const credentials = { emailAdress: 'name@server.nl' };
     chai
@@ -363,7 +388,12 @@ describe('Register User', function () {
         done();
       });
   });
-  // Test case UC-204 Get User by ID
+});
+// Test case UC-204 Get User by ID
+describe('Get User by ID', function () {
+  beforeEach(setupDatabase);
+  afterEach(cleanupDatabase);
+
   it('UC-204-3 should return user details and meals', (done) => {
     const userId = 1; // Change this to the appropriate user ID in the database
     chai
@@ -417,13 +447,15 @@ describe('Register User', function () {
         done();
       });
   });
-
-  // Test case UC-205 Update User
-
+});
+// Test case UC-205 Update User
+describe('Update User', function () {
+  beforeEach(setupDatabase);
+  afterEach(cleanupDatabase);
   // User updated successfully
   it('TC-205-6 should update user data', (done) => {
     const requestData = {
-      emailAdress: 'testEmail@test.com',
+      emailAdress: 'name@server.nl',
       updateData: {
         firstName: 'testFirstName',
         lastName: 'testLastName',
@@ -503,7 +535,7 @@ describe('Register User', function () {
   // Invalid firstName test
   it('TC-205- should return error if firstName is not a string', (done) => {
     const requestData = {
-      emailAdress: 'testEmail@test.com',
+      emailAdress: 'name@server.nl',
       updateData: {
         firstName: 123,
       },
@@ -525,7 +557,7 @@ describe('Register User', function () {
   // Invalid lastName test
   it('TC-205- should return error if lastName is not a string', (done) => {
     const requestData = {
-      emailAdress: 'testEmail@test.com',
+      emailAdress: 'name@server.nl',
       updateData: {
         lastName: 456,
       },
@@ -547,7 +579,7 @@ describe('Register User', function () {
   // Invalid street test
   it('TC-205- should return error if street is not a string', (done) => {
     const requestData = {
-      emailAdress: 'testEmail@test.com',
+      emailAdress: 'name@server.nl',
       updateData: {
         street: 789,
       },
@@ -569,7 +601,7 @@ describe('Register User', function () {
   // Invalid city test
   it('TC-205- should return error if city is not a string', (done) => {
     const requestData = {
-      emailAdress: 'testEmail@test.com',
+      emailAdress: 'name@server.nl',
       updateData: {
         city: 101112,
       },
@@ -591,7 +623,7 @@ describe('Register User', function () {
   // Invalid phoneNumber test
   it('TC-205-3 should return error if phoneNumber is invalid', (done) => {
     const requestData = {
-      emailAdress: 'testEmail@test.com',
+      emailAdress: 'name@server.nl',
       updateData: {
         phoneNumber: '123456789',
       },
@@ -614,7 +646,7 @@ describe('Register User', function () {
   // Invalid newPassword test
   it('TC-205- should return error if newPassword is invalid', (done) => {
     const requestData = {
-      emailAdress: 'testEmail@test.com',
+      emailAdress: 'name@server.nl',
       updateData: {
         newPassword: 'invalidpassword',
       },
@@ -635,7 +667,11 @@ describe('Register User', function () {
         done();
       });
   });
-  // Test case UC-206 Delete User
+});
+// Test case UC-206 Delete User
+describe('Delete User', function () {
+  beforeEach(setupDatabase);
+  afterEach(cleanupDatabase);
   it('TC-206-4 should delete user', (done) => {
     const credentials = { emailAdress: 'name@server.nl' };
 
