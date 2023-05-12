@@ -3,9 +3,11 @@ const jwt = require('jsonwebtoken');
 const dbconnection = require('../database/dbconnection');
 const { logger, jwtSecretKey } = require('../test/utils/utils');
 const fun = require('../controller/function');
+const { userInfo } = require('os');
 
 module.exports = {
   login(req, res, next) {
+    logger.trace('login called');
     // Check if required fields are provided
     const credentials = {
       emailAdress: req.body.emailAdress,
@@ -34,7 +36,9 @@ module.exports = {
         [emailAdress],
         function (error, results, fields) {
           connection.release();
-         
+          logger.trace(
+            'connection query returned results from pool with email address and password from credentials '
+          );
           console.log('emailAdress: ' + emailAdress);
           if (error) {
             res
@@ -49,14 +53,27 @@ module.exports = {
               .status(401)
               .json({ status: 401, message: 'Invalid password', data: {} });
           } else {
-            const payload = { userId: results[0].id };
-            const token = jwt.sign(payload, jwtSecretKey, { expiresIn: '1h' });
-
-            res.status(200).json({
-              status: 200,
-              message: 'Authentication successful!',
-              data: { token },
-            });
+            const { password, id, ...userInfo } = results[0];
+            const payload = { userId: id };
+            jwt.sign(
+              payload,
+              jwtSecretKey,
+              { expiresIn: '2d' },
+              (err, token) => {
+                if (err) {
+                }
+                if (token) {
+                  res.status(200).json({
+                    status: 200,
+                    message: 'Authentication successful!',
+                    data: {
+                      userInfo,
+                      token,
+                    },
+                  });
+                }
+              }
+            );
           }
         }
       );
@@ -68,23 +85,33 @@ module.exports = {
    */
   validateLogin(req, res, next) {
     // Check if emailAdress exists, is a string, is not an empty string, and passes email validation
-    if (!req.body.emailAdress || typeof req.body.emailAdress !== 'string' || req.body.emailAdress.trim() === '' || !fun.validateEmail(req.body.emailAdress)) {
+    if (
+      !req.body.emailAdress ||
+      typeof req.body.emailAdress !== 'string' ||
+      req.body.emailAdress.trim() === '' ||
+      !fun.validateEmail(req.body.emailAdress)
+    ) {
       return res.status(400).json({
         status: 400,
         message: 'Invalid email address.',
         data: new Date().toISOString(),
       });
     }
-  
+
     // Check if password exists, is a string, is not an empty string, and passes password validation
-    if (!req.body.password || typeof req.body.password !== 'string' || req.body.password.trim() === '' || !fun.validatePassword(req.body.password)) {
+    if (
+      !req.body.password ||
+      typeof req.body.password !== 'string' ||
+      req.body.password.trim() === '' ||
+      !fun.validatePassword(req.body.password)
+    ) {
       return res.status(400).json({
         status: 400,
         message: 'Invalid password.',
         data: new Date().toISOString(),
       });
     }
-  
+
     // If both checks pass, proceed to the next middleware function
     next();
   },

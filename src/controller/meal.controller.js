@@ -1,15 +1,16 @@
 const fun = require('../controller/function');
 const assert = require('assert');
 const dbconnection = require('../database/dbconnection');
+const userController = require('./userController');
 const logger = require('../test/utils/utils').logger;
 
 // userController handles the routes for creating, updating, deleting, and retrieving user data
-const userController = {
-  // getAllUsers retrieves all users from the database
-  getAllUsers: (req, res, next) => {
-    logger.info('Get all users');
+const mealController = {
+  // getAllMeals retrieves all users from the database
+  getAllMeals: (req, res, next) => {
+    logger.info('Get all meals');
 
-    let sqlStatement = 'SELECT * FROM `user`';
+    let sqlStatement = 'SELECT * FROM `meal`';
     // Hier wil je misschien iets doen met mogelijke filterwaarden waarop je zoekt.
     if (req.query.isactive) {
       // voeg de benodigde SQL code toe aan het sql statement
@@ -36,7 +37,7 @@ const userController = {
             logger.info('Found', results.length, 'results');
             res.status(200).json({
               status: 200,
-              message: 'User getAll endpoint',
+              message: 'Meal getAll endpoint',
               data: results,
             });
           }
@@ -46,164 +47,68 @@ const userController = {
     });
   },
   // CreateUser creates a new user and adds it to the database
-  createUser: (req, res) => {
-    const newUser = ({
-      firstName,
-      lastName,
-      isActive,
-      emailAdress,
-      password,
-      phoneNumber,
-      roles,
-      street,
-      city,
-    } = req.body);
-    logger.debug('user = ', newUser);
+  createMeal: (req, res, next) => {
+    logger.trace('Create a new Meal');
+    const meal = req.body;
+    const userId = req.userId;
+    logger.trace('meal: ' + meal);
+    try {
+    } catch (error) {}
+    let sqlStatement =
+      'INSERT INTO `meal` ( `name`, `description`, `imageUrl`, `dateTime`, `maxAmountOfParticipants`, `price`, `cookId`) VALUES' +
+      '(?,?,?,?,?,?,?),';
 
-    // validation of email address
-    if (!fun.validateEmail(newUser.emailAdress)) {
-      return res.status(400).json({
-        status: 400,
-        message: 'Invalid email address',
-        data: {},
-      });
-    }
-
-    // Validation of phone number
-    if (newUser.phoneNumber) {
-      if (!fun.validatePhoneNumber(newUser.phoneNumber)) {
-        return res.status(400).json({
-          status: 400,
-          message: 'Invalid phone number. Phone number must be 10 digits long.',
-          data: {},
-        });
-      }
-    }
-
-    // Validation of password
-
-    if (!fun.validatePassword(newUser.password)) {
-      return res.status(400).json({
-        status: 400,
-        message:
-          'Invalid password. The password must be at least 8 characters long, contain an uppercase letter, a lowercase letter, a number and a special character.',
-        data: {},
-      });
-    }
-
-    if (
-      !newUser.firstName ||
-      !newUser.lastName ||
-      !newUser.emailAdress ||
-      !newUser.password ||
-      !newUser.street ||
-      !newUser.city
-    ) {
-      return res.status(400).json({
-        status: 400,
-        message: 'Required fields missing',
-        data: {},
-      });
-    }
-    // Validate the types of fields
-    const fieldTypes = {
-      firstName: 'string',
-      lastName: 'string',
-      emailAdress: 'string',
-      password: 'string',
-      phoneNumber: 'string',
-      street: 'string',
-      city: 'string',
-    };
-
-    for (const field in fieldTypes) {
-      const expectedType = fieldTypes[field];
-      const actualType = typeof newUser[field];
-
-      if (actualType !== expectedType) {
-        return res.status(400).json({
-          status: 400,
-          message: `Invalid field type: ${field} should be of type ${expectedType}, but it is of type ${actualType}.`,
-          data: {},
-        });
-      }
-    }
     dbconnection.getConnection(function (err, connection) {
-      if (err) throw err; // not connected!
-
-      // Use the connection
-      const sql = `
-        INSERT INTO user (
-          firstName, lastName, emailAdress, password,
-          phoneNumber, street, city
-        ) VALUES ( ?, ?, ?, ?, ?, ?, ?)
-      `;
-      const values = [
-        newUser.firstName,
-        newUser.lastName,
-        newUser.emailAdress,
-        newUser.password,
-        newUser.phoneNumber || '',
-        newUser.street,
-        newUser.city,
-      ];
-      connection.query(sql, values, function (error, results, fields) {
-        // When done with the connection, release it.
-        if (error) {
-          if (error.code === 'ER_DUP_ENTRY') {
-            // Send a custom error message to the user
-            res.status(409).json({
-              status: 409,
-              message: 'A user already exists with this email address.',
-              data: {},
-            });
-          } else {
-            // Send the original error message if it is another error
-            logger.info('#affectedRows= ', results.affectedRows);
-            throw error;
-          }
-        } else {
-          let user_id = results.insertId;
-
-          // New SQL query to fetch the user data from the database
-          const fetchSql = 'SELECT * FROM user WHERE id = ?';
-          connection.query(
-            fetchSql,
-            [user_id],
-            function (fetchError, fetchResults, fetchFields) {
-              // Release the connection
-              connection.release();
-
-              // Handle error after the release
-              if (fetchError) throw fetchError;
-
-              // Send the fetched user data to the client
-              res.status(201).json({
-                status: 201,
-                message: `User with email address ${newUser.emailAdress} is registered`,
-                data: fetchResults[0], // assuming the query returns an array
+      if (err) {
+      }
+      if (connection) {
+        connection.query(
+          sqlStatement,
+          [
+            meal.name,
+            meal.description,
+            meal.imageUrl,
+            meal.dateTime,
+            meal.maxAmountOfParticipants,
+            meal.price,
+            userId,
+          ],
+          (err, result, fields) => {
+            if (err) {
+            }
+            if (result) {
+              logger.trace('Meal successfully Added, id = ' + result.id);
+              const newMeal = {
+                id: result[0].insertId,
+                ...meal,
+              };
+              res.status(200).json({
+                status: 200,
+                message: 'New Meal added successfully',
+                data: newMeal,
               });
             }
-          );
-        }
-      });
+          }
+        );
+      }
     });
   },
   // deleteUser deletes a user from the database based on their email and password
-  deleteUser: (req, res, next) => {
-    logger.info('Deleting user');
-    let sqlStatement = 'SELECT * FROM `user` WHERE  emailAdress=?';
-    let emailAdress = req.body.emailAdress;
-    logger.info('emailAddress =', emailAdress);
+  deleteMeal: (req, res, next) => {
+    const mealId = req.params.id;
+    logger.trace('Deleting meal', mealId);
+    let sqlStatement = 'DELETE * FROM `meal` WHERE  id=? AND cookId = ?';
+    let userId = req.userId;
+    logger.trace('userId =', userId);
     dbconnection.getConnection(function (err, conn) {
       if (err) {
-        console.log('error', err);
+        logger.error(err.code, err.syscall, err.address, err.port);
         next('error: ' + err.message);
       }
       if (conn) {
         conn.query(
           sqlStatement,
-          [emailAdress],
+          [mealId, userId],
           function (err, results, fields) {
             if (err) {
               logger.error(err.message);
@@ -213,40 +118,20 @@ const userController = {
               });
               return;
             }
-            if (results.length === 0) {
-              logger.error('Email address is incorrect');
-              res.status(404).json({
-                status: 404,
-                message: 'user not found',
+            if (results && results.affectedRows === 1) {
+              logger.trace('Deleted meal', results);
+              res.status(200).json({
+                status: 200,
+                message: 'Meal deleted successfully',
                 data: {},
               });
-              return;
+            } else {
+              next({
+                status: 401,
+                message: 'Not Authorized',
+                data: {},
+              });
             }
-
-            let deletedUser = results[0];
-            sqlStatement = 'DELETE FROM `user` WHERE  emailAdress=?';
-            conn.query(
-              sqlStatement,
-              [emailAdress],
-              function (err, results, fields) {
-                if (err) {
-                  logger.error(err.message);
-                  next({
-                    status: 409,
-                    message: err.message,
-                  });
-                  return;
-                }
-                if (results) {
-                  logger.info('Deleted user with emailAdress', emailAdress);
-                  res.status(200).json({
-                    status: 200,
-                    message: 'User deleted successfully',
-                    data: deletedUser,
-                  });
-                }
-              }
-            );
           }
         );
         dbconnection.releaseConnection(conn);
@@ -254,7 +139,7 @@ const userController = {
     });
   },
   // updateUser updates a user's information in the database based on their email and password
-  updateUser: (req, res) => {
+  updateMeal: (req, res) => {
     const { emailAdress, updateData } = req.body;
     console.log('Request body:', req.body);
 
@@ -382,60 +267,8 @@ const userController = {
       });
     });
   },
-  // getUserProfile retrieves a user's profile information based on their email and password
-  getUserProfile: (req, res) => {
-    const emailAdress = req.body.emailAdress;
-
-    if (!fun.validateEmail(emailAdress)) {
-      return res.status(400).json({
-        status: 400,
-        message: 'Email address not valid',
-        data: {},
-      });
-    }
-
-    dbconnection.getConnection(function (err, connection) {
-      if (err) throw err;
-
-      const userSql = 'SELECT * FROM user WHERE emailAdress = ?';
-
-      connection.query(
-        userSql,
-        [emailAdress],
-        function (error, userResults, fields) {
-          connection.release();
-          if (error) throw error;
-
-          if (userResults.length === 0) {
-            res.status(404).json({
-              status: 404,
-              message: 'User not found',
-              data: {},
-            });
-          } else {
-            const user = userResults[0];
-            const userDetails = {
-              id: user.id,
-              firstName: user.firstName,
-              lastName: user.lastName,
-              emailAdress: user.emailAdress,
-              password: user.password,
-              street: user.street,
-              city: user.city,
-              phoneNumber: user.phoneNumber,
-            };
-            res.status(200).json({
-              status: 200,
-              message: 'Profile data retrieved',
-              data: userDetails,
-            });
-          }
-        }
-      );
-    });
-  },
   // getUserById retrieves a user's public information and associated meals based on their user ID
-  getUserById: (req, res) => {
+  getMealById: (req, res) => {
     const { id } = req.params;
 
     if (isNaN(id)) {
@@ -528,4 +361,4 @@ const userController = {
   },
 };
 // Export the userController object, making its methods available for use in other modules
-module.exports = userController;
+module.exports = mealController;

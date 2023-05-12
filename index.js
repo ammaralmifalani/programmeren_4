@@ -2,7 +2,9 @@ const express = require('express');
 require('dotenv').config();
 const app = express();
 const port = process.env.PORT;
-const userRouter = require('./src/routes/routes');
+const userRouter = require('./src/routes/user.routes');
+const mealRouter = require('./src/routes/meal.routes');
+const authRouter = require('./src/routes/auth.routes');
 const logger = require('./src/test/utils/utils').logger;
 
 // Parse JSON requests
@@ -30,6 +32,8 @@ app.get('/api/info', (req, res) => {
 
 // Refer to routes defined in userRouter
 app.use('/api/user', userRouter);
+app.use('/api/meal',mealRouter);
+app.use('/api', authRouter);
 
 // app.get('api/user', (req, res) => {
 //   const queryField = Object.entries(req.query);

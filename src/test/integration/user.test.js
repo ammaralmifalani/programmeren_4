@@ -696,7 +696,7 @@ describe('UC-101 Inloggen', () => {
     };
     chai
       .request(app)
-      .post('/api/user/login')
+      .post('/login')
       .send(credentials)
       .end((err, res) => {
         if (err) {
@@ -720,7 +720,7 @@ describe('UC-101 Inloggen', () => {
     };
     chai
       .request(app)
-      .post('/api/user/login')
+      .post('/login')
       .send(credentials)
       .end((err, res) => {
         if (err) {
@@ -740,7 +740,7 @@ describe('UC-101 Inloggen', () => {
     };
     chai
       .request(app)
-      .post('/api/user/login')
+      .post('/login')
       .send(credentials)
       .end((err, res) => {
         if (err) {
@@ -761,7 +761,7 @@ describe('UC-101 Inloggen', () => {
     };
     chai
       .request(app)
-      .post('/api/user/login')
+      .post('/login')
       .send(credentials)
       .end((err, res) => {
         if (err) {
