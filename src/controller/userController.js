@@ -3,10 +3,11 @@ const assert = require('assert');
 const { database, meal_database } = require('../database/inmemdb');
 const dbconnection = require('../database/dbconnection');
 const logger = require('../test/utils/utils').logger;
-let index = database.users.length;
+
 
 // userController handles the routes for creating, updating, deleting, and retrieving user data
 const userController = {
+  
   // getAllUsers retrieves all users from the database
   getAllUsers: (req, res, next) => {
     logger.info('Get all users');
@@ -503,40 +504,6 @@ const userController = {
           );
         }
       });
-    });
-  },
-  // loginUser logs in a user based on their email address and password
-  loginUser: (req, res) => {
-    const { emailaddress, password } = req.body;
-    logger.debug(`Login request received for email: ${emailaddress}`);
-
-    // Find the user with the provided email address
-    const user = database.users.find(
-      (user) => user.emailaddress === emailaddress
-    );
-
-    // Return a 404 status if the user is not found
-    if (!user) {
-      logger.warn(`User not found for email: ${emailaddress}`);
-      return res
-        .status(404)
-        .json({ status: 404, message: 'Gebruiker niet gevonden', data: {} });
-    }
-
-    // Check if the provided password matches the stored password for the user
-    if (user.password !== password) {
-      logger.warn(`Invalid password for email: ${emailaddress}`);
-      return res
-        .status(401)
-        .json({ status: 401, message: 'Ongeldig wachtwoord', data: {} });
-    }
-
-    // Log the successful login and return a success message
-    logger.info(`User with email ${emailaddress} successfully logged in.`);
-    res.status(200).json({
-      status: 200,
-      message: 'Gebruiker is met succes ingelogd',
-      data: {},
     });
   },
   // getTableLength retrieves the length of a table from the database

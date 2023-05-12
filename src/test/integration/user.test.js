@@ -4,7 +4,8 @@ const chaiHttp = require('chai-http');
 const app = require('../../../index');
 const dbconnection = require('../../database/dbconnection');
 const { getTableLength } = require('../../controller/userController');
-const logger = require('../utils/utils').logger;
+const { logger, jwtSecretKey } = require('../utils/utils');
+const jwt = require('jsonwebtoken');
 require('tracer').setLevel('debug');
 chai.should();
 chai.use(chaiHttp);
@@ -20,14 +21,15 @@ const CLEAR_PARTICIPANTS_TABLE = 'DELETE IGNORE FROM `meal_participants_user`;';
 const CLEAR_USERS_TABLE = 'DELETE IGNORE FROM `user`;';
 const CLEAR_DB =
   CLEAR_MEAL_TABLE + CLEAR_PARTICIPANTS_TABLE + CLEAR_USERS_TABLE;
-
+const emailAdress_test = 'a.name@server.nl';
+const password_test = 'Abcd@123';
 /**
  * Voeg een user toe aan de database. Deze user heeft id 1.
  * Deze id kun je als foreign key gebruiken in de andere queries, bv insert meal.
  */
 const INSERT_USER =
   'INSERT INTO `user` (`id`, `firstName`, `lastName`, `emailAdress`, `password`, `street`, `city` ) VALUES' +
-  '(1, "first", "last", "name@server.nl", "secret", "street", "city")';
+  '(1, "first", "last", "a.name@server.nl", "Abcd@123", "street", "city")';
 
 /**
  * Query om twee meals toe te voegen. Let op de cookId, die moet matchen
@@ -66,7 +68,7 @@ describe('User Registration', function () {
     const newUser = {
       firstName: 'testFirstName',
       // lastName: 'testLastName',
-      emailAdress: 'testEmail@test.com',
+      emailAdress: 'a.testEmail@test.com',
       password: 'Test@123',
       phoneNumber: '0612345678',
       street: 'Main Street 123',
@@ -90,7 +92,7 @@ describe('User Registration', function () {
     const newUser = {
       firstName: 'testFirstName',
       lastName: '',
-      emailAdress: 'testEmail@test.com',
+      emailAdress: 'a.testEmail@test.com',
       password: 'Test@123',
       phoneNumber: '0612345678',
       street: 'Main Street 123',
@@ -114,7 +116,7 @@ describe('User Registration', function () {
     const newUser = {
       firstName: 'testFirstName',
       lastName: 1,
-      emailAdress: 'testEmail@test.com',
+      emailAdress: 'a.testEmail@test.com',
       password: 'Test@123',
       phoneNumber: '0612345678',
       street: 'Main Street 123',
@@ -140,7 +142,7 @@ describe('User Registration', function () {
     const newUser = {
       firstName: 'testFirstName',
       lastName: 'testLastName',
-      emailAdress: 'testEmailtest.com',
+      emailAdress: 'a.testEmailtest.com',
       password: 'Test@123',
       phoneNumber: '0612345678',
       street: 'Main Street 123',
@@ -164,7 +166,7 @@ describe('User Registration', function () {
     const newUser = {
       firstName: 'testFirstName',
       lastName: 'testLastName',
-      emailAdress: 'testEmail@test.com',
+      emailAdress: 'a.testEmail@test.com',
       password: 'Test23',
       phoneNumber: '0612345678',
       street: 'Main Street 123',
@@ -190,7 +192,7 @@ describe('User Registration', function () {
     const newUser = {
       firstName: 'testFirstName',
       lastName: 'testLastName',
-      emailAdress: 'name@server.nl',
+      emailAdress: 'a.name@server.nl',
       password: 'Test@1123',
       phoneNumber: '0612345678',
       street: 'Main Street 123',
@@ -216,7 +218,7 @@ describe('User Registration', function () {
     const newUser = {
       firstName: 'testFirstName',
       lastName: 'testLastName',
-      emailAdress: 'testEmail@test.com',
+      emailAdress: 'a.testEmail@test.com',
       password: 'Test@123',
       phoneNumber: '0612345678',
       street: 'Main Street 123',
@@ -257,7 +259,7 @@ describe('User Registration', function () {
     const newUser = {
       firstName: 'testFirstName',
       lastName: 'testLastName',
-      emailAdress: 'testEmail@test.com',
+      emailAdress: 'a.testEmail@test.com',
       password: 'Test@123',
       phoneNumber: '061345678',
       street: 'Main Street 123',
@@ -314,7 +316,7 @@ describe('User Profile', function () {
   beforeEach(setupDatabase);
   afterEach(cleanupDatabase);
   it('TC-203-1 should return user profile data', (done) => {
-    const credentials = { emailAdress: 'name@server.nl' };
+    const credentials = { emailAdress: 'a.name@server.nl' };
     chai
       .request(app)
       .post('/api/user/profile')
@@ -330,7 +332,7 @@ describe('User Profile', function () {
           firstName: 'first',
           lastName: 'last',
           emailAdress: credentials.emailAdress,
-          password: 'secret',
+          password: password_test,
           isActive: 1,
           phoneNumber: '0612345678',
           roles: 'editor,guest',
@@ -349,7 +351,7 @@ describe('User Profile', function () {
       });
   });
   it('TC-203-2 should return error if user not found', (done) => {
-    const credentials = { emailAdress: 'nonexistentuser@example.com' };
+    const credentials = { emailAdress: 'a.nonexistentuser@example.com' };
 
     chai
       .request(app)
@@ -431,7 +433,7 @@ describe('Update User', function () {
   // User updated successfully
   it('TC-205-6 should update user data', (done) => {
     const requestData = {
-      emailAdress: 'name@server.nl',
+      emailAdress: 'a.name@server.nl',
       updateData: {
         firstName: 'testFirstName',
         lastName: 'testLastName',
@@ -511,7 +513,7 @@ describe('Update User', function () {
   // Invalid firstName test
   it('TC-205- should return error if firstName is not a string', (done) => {
     const requestData = {
-      emailAdress: 'name@server.nl',
+      emailAdress: 'a.name@server.nl',
       updateData: {
         firstName: 123,
       },
@@ -533,7 +535,7 @@ describe('Update User', function () {
   // Invalid lastName test
   it('TC-205- should return error if lastName is not a string', (done) => {
     const requestData = {
-      emailAdress: 'name@server.nl',
+      emailAdress: 'a.name@server.nl',
       updateData: {
         lastName: 456,
       },
@@ -555,7 +557,7 @@ describe('Update User', function () {
   // Invalid street test
   it('TC-205- should return error if street is not a string', (done) => {
     const requestData = {
-      emailAdress: 'name@server.nl',
+      emailAdress: 'a.name@server.nl',
       updateData: {
         street: 789,
       },
@@ -577,7 +579,7 @@ describe('Update User', function () {
   // Invalid city test
   it('TC-205- should return error if city is not a string', (done) => {
     const requestData = {
-      emailAdress: 'name@server.nl',
+      emailAdress: 'a.name@server.nl',
       updateData: {
         city: 101112,
       },
@@ -599,7 +601,7 @@ describe('Update User', function () {
   // Invalid phoneNumber test
   it('TC-205-3 should return error if phoneNumber is invalid', (done) => {
     const requestData = {
-      emailAdress: 'name@server.nl',
+      emailAdress: 'a.name@server.nl',
       updateData: {
         phoneNumber: '123456789',
       },
@@ -622,7 +624,7 @@ describe('Update User', function () {
   // Invalid newPassword test
   it('TC-205- should return error if newPassword is invalid', (done) => {
     const requestData = {
-      emailAdress: 'name@server.nl',
+      emailAdress: 'a.name@server.nl',
       updateData: {
         newPassword: 'invalidpassword',
       },
@@ -649,8 +651,7 @@ describe('Delete User', function () {
   beforeEach(setupDatabase);
   afterEach(cleanupDatabase);
   it('TC-206-4 should delete user', (done) => {
-    const credentials = { emailAdress: 'name@server.nl' };
-
+    const credentials = { emailAdress: 'a.name@server.nl' };
     chai
       .request(app)
       .delete('/api/user/delete')
@@ -682,6 +683,100 @@ describe('Delete User', function () {
         Object.keys(data).length.should.be.equal(0);
 
         done();
+      });
+  });
+});
+describe('UC-101 Inloggen', () => {
+  beforeEach(setupDatabase);
+  afterEach(cleanupDatabase);
+  it('TC-101-1 Verplicht veld ontbreekt', (done) => {
+    const credentials = {
+      emailAdress: emailAdress_test,
+      // password: password_test,
+    };
+    chai
+      .request(app)
+      .post('/api/user/login')
+      .send(credentials)
+      .end((err, res) => {
+        if (err) {
+          console.error(err);
+          return done(err);
+        }
+        logger.debug('Response:', res.body);
+        res.should.have.status(400);
+        res.body.should.have.property('message');
+        let { data, message, status } = res.body;
+        Object.keys(data).length.should.be.equal(0);
+        done();
+      });
+  });
+
+  it('TC-101-2 Niet-valide wachtwoord', (done) => {
+    // You would need to know an existing email
+    const credentials = {
+      emailAdress: emailAdress_test,
+      password: 'invalidPassword',
+    };
+    chai
+      .request(app)
+      .post('/api/user/login')
+      .send(credentials)
+      .end((err, res) => {
+        if (err) {
+          console.error(err);
+          return done(err);
+        }
+        logger.debug('Response:', res.body);
+        res.should.have.status(401);
+        done();
+      });
+  });
+
+  it('TC-101-3 Gebruiker bestaat niet', (done) => {
+    const credentials = {
+      emailAdress: 'nonexisting@example.com',
+      password: 'password',
+    };
+    chai
+      .request(app)
+      .post('/api/user/login')
+      .send(credentials)
+      .end((err, res) => {
+        if (err) {
+          console.error(err);
+          return done(err);
+        }
+        logger.debug('Response:', res.body);
+        res.should.have.status(404);
+        done();
+      });
+  });
+
+  it('TC-101-4 Gebruiker succesvol ingelogd', (done) => {
+    // You would need to know an existing email and password
+    const credentials = {
+      emailAdress: emailAdress_test,
+      password: password_test,
+    };
+    chai
+      .request(app)
+      .post('/api/user/login')
+      .send(credentials)
+      .end((err, res) => {
+        if (err) {
+          console.error(err);
+          return done(err);
+        }
+        logger.debug('Response:', res.body);
+        res.should.have.status(200);
+        res.body.should.have.property('message');
+        res.body.data.should.have.property('token');
+        jwt.verify(res.body.data.token, jwtSecretKey, (err, payload) => {
+          assert.equal(err, null);
+          assert.equal(payload.userId, 1);
+          done();
+        });
       });
   });
 });

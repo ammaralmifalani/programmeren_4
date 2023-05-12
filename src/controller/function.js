@@ -13,7 +13,8 @@ Voor telefoonnummer:
 */
 function validateEmail(email) {
   // const regex = /^[\w-]+(\.[\w-]+)*@([\w-]+\.)+[a-zA-Z]{2,7}$/;
-  const regex = /^(?i)[a-z]{1,1}\.[a-z]{2,}@[a-z]{2,}\.[a-z]{2,3}$/;
+  const regex = /^[a-z]{1,1}\.[a-z]{2,}@[a-z]{2,}\.[a-z]{2,3}$/i;
+
   return regex.test(email);
 }
 // Validates the password using a regular expression
