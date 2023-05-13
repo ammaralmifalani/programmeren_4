@@ -36,11 +36,11 @@ or
 
 Create a `.env` file in the root folder of the project and add the following variables, using your own values:
 ```env
-- DB_HOST=<your_database_host>
-- DB_PORT=<your_database_port> 
-- DB_USER=<your_database_user> 
-- DB_PASSWORD=<your_database_password>
-- DB_DATABASE=<your_database_name>
+ DB_HOST=<your_database_host>
+ DB_PORT=<your_database_port> 
+ DB_USER=<your_database_user> 
+ DB_PASSWORD=<your_database_password>
+ DB_DATABASE=<your_database_name>
 ```
 ### :cd: Step 5: Start the database
 
