@@ -27,29 +27,20 @@ or
  mysql -u root
 ```
 ```sql
-  CREATE DATABASE share_a_meal;
-  USE share_a_meal;
+  CREATE DATABASE <your_database_name>;
+  USE <your_database_name>;
   SOURCE share-a-meal.sql;
 ```
 ### :memo: Step 4: Configure Environment Variables
 
 Create a `.env` file in the root folder of the project and add the following variables, using your own values:
-<<<<<<< HEAD
-```bash
-- DB_HOST=<your_database_host>
-- DB_PORT=<your_database_port> 
-- DB_USER=<your_database_user> 
-- DB_PASSWORD=<your_database_password>
-- DB_DATABASE=<your_database_name>
-=======
 ```env
  DB_HOST=<your_database_host>
  DB_PORT=<your_database_port> 
  DB_USER=<your_database_user> 
  DB_PASSWORD=<your_database_password>
  DB_DATABASE=<your_database_name>
->>>>>>> 959c25744be72995e4519b61d55bf45d422f0e24
-```
+ ```
 ### :cd: Step 5: Start the database
 Start your MySQL database. If you're using a local development environment like [XAMPP](https://www.apachefriends.org/index.html), ensure the MySQL service is running. 
 ### :rocket: Step 6: Start the API Server
@@ -107,8 +98,6 @@ The following endpoints require a request body:
     }
 }
 ````
-- This pattern checks for a valid Dutch phone number.
-- The phone number should start with "06" followed by an optional dash or space, and then 8 digits.
 ## :airplane: Deployment
 
 The API server has been deployed and can be accessed at `https://share-a-meal-api-server.up.railway.app`. 
