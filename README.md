@@ -6,7 +6,6 @@ This is the API server for the Share-a-Meal project. Share-a-Meal is a platform 
 - :deciduous_tree: Node.js 
 - :train2: Express.js 
 - :floppy_disk: MySQL 
-
 ## :inbox_tray: Installation
 ### :file_folder: Step 1: Clone the Repository
 ```bash
@@ -65,7 +64,6 @@ To run tests, run the following command
   npm run test
 ```
 ## :link: API Endpoints
-
 ### Server Information
 - `GET /api/info` : Retrieve server information
 ### Users
@@ -109,32 +107,8 @@ The following endpoints require a request body:
     }
 }
 ````
-## :mag: Regular Expressions
-We use regular expressions (regex) to validate user input. Here's an explanation of the regex patterns we're using:
-
- 1. Email: ^[a-z]{1,1}\.[a-z]{2,}@[a-z]{2,}\.[a-z]{2,3}$
-- This pattern checks if the input is a valid email address.
-- The email should start with a lowercase letter followed by a dot.
-- After the dot, there should be at least two lowercase letters.
-- The "@" symbol should follow next.
-- After the "@", there should be at least two lowercase letters, followed by a dot.
-- Finally, there should be between two to three lowercase letters.
-<<<<<<< HEAD
-### 2. Password: ^(?=.*\d)(?=.*[A-Z]).{8,}$
-=======
-- 
- 2. Password: ^(?=.*\d)(?=.*[A-Z]).{8,}$
->>>>>>> 959c25744be72995e4519b61d55bf45d422f0e24
-
-- This pattern checks for a valid password.
-- The password should be at least 8 characters long.
-- It should contain at least one digit (?=.*\d).
-- It should contain at least one uppercase letter (?=.*[A-Z]).
- 3. Phone number: ^06[-\s]?\d{8}$ or empty
-
-- This pattern checks for a valid Dutch phone number or an empty input.
+- This pattern checks for a valid Dutch phone number.
 - The phone number should start with "06" followed by an optional dash or space, and then 8 digits.
-
 ## :airplane: Deployment
 
 The API server has been deployed and can be accessed at `https://share-a-meal-api-server.up.railway.app`. 
