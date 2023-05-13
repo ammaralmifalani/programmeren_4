@@ -27,8 +27,11 @@ Create a new MySQL database for your project and import the share-a-meal.sql fil
 
 Create a `.env` file in the root folder of the project and add the following variables, using your own values:
 ```bash
-DB_HOST=<your_database_host>
-DB_PORT=<your_database_port> DB_USER=<your_database_user> DB_PASSWORD=<your_database_password> DB_DATABASE=<your_database_name>
+- DB_HOST=<your_database_host>
+- DB_PORT=<your_database_port> 
+- DB_USER=<your_database_user> 
+- DB_PASSWORD=<your_database_password>
+- DB_DATABASE=<your_database_name>
 ```
 ### :cd: Step 5: Start the database
 ```bash
@@ -60,7 +63,7 @@ To run tests, run the following command
 
 The following endpoints require a request body:
 
-  -`POST /api/user`: Create a new user (fields with an asterisk are required)
+- `POST /api/user`: Create a new user (fields with an asterisk are required)
 
 ````json
 {
@@ -73,7 +76,7 @@ The following endpoints require a request body:
     "city": "Amsterdam" *
 }
 ````
-- `PUT /api/user/:id`: Update an existing user based on email address 
+- `PUT /api/user/:id`: Update an existing user based on a valid token.  
 
 ````json 
 {
@@ -118,3 +121,4 @@ The API server has been deployed and can be accessed at `https://share-a-meal-ap
 You can use the same endpoints as described in the "API Endpoints" section, just replace `http://localhost:3000` with the deployment URL.
 
 For example, to get all users, you can send a GET request to `https://share-a-meal-api-server.up.railway.app/api/user`.
+
