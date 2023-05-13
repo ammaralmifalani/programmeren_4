@@ -1,5 +1,5 @@
 # :plate_with_cutlery: Share-a-Meal API Server
-[![Deploy to Railway](../shareameal_api_server/badge.svg)](https://github.com/ammaralmifalani/shareameal_api_server/actions/workflows/main.yml)
+[![Deploy to Railway](./badge.svg)](https://github.com/ammaralmifalani/shareameal_api_server/actions/workflows/main.yml)
 ## :book: Introduction
 This is the API server for the Share-a-Meal project. Share-a-Meal is a platform where users can share meals with others in their local area. This server is built with Node.js and Express and uses MySQL for the database.
 ## :clipboard: Requirements 
@@ -22,21 +22,37 @@ npm install
 Create a new MySQL database for your project and import the share-a-meal.sql file to set up the necessary tables and structures:
 ```bash
  mysql -u <your_database_user> -p <your_database_name> < share-a-meal.sql
+``` 
+or 
+```bash
+ mysql -u root
+```
+```sql
+  CREATE DATABASE share_a_meal;
+  USE share_a_meal;
+  SOURCE share-a-meal.sql;
 ```
 ### :memo: Step 4: Configure Environment Variables
 
 Create a `.env` file in the root folder of the project and add the following variables, using your own values:
+<<<<<<< HEAD
 ```bash
 - DB_HOST=<your_database_host>
 - DB_PORT=<your_database_port> 
 - DB_USER=<your_database_user> 
 - DB_PASSWORD=<your_database_password>
 - DB_DATABASE=<your_database_name>
+=======
+```env
+ DB_HOST=<your_database_host>
+ DB_PORT=<your_database_port> 
+ DB_USER=<your_database_user> 
+ DB_PASSWORD=<your_database_password>
+ DB_DATABASE=<your_database_name>
+>>>>>>> 959c25744be72995e4519b61d55bf45d422f0e24
 ```
 ### :cd: Step 5: Start the database
-```bash
- [XAMPP](https://www.apachefriends.org/index.html)
- ```
+Start your MySQL database. If you're using a local development environment like [XAMPP](https://www.apachefriends.org/index.html), ensure the MySQL service is running. 
 ### :rocket: Step 6: Start the API Server
 
 ```bash
@@ -96,23 +112,29 @@ The following endpoints require a request body:
 ## :mag: Regular Expressions
 We use regular expressions (regex) to validate user input. Here's an explanation of the regex patterns we're using:
 
-### 1. Email: ^[a-z]{1,1}\.[a-z]{2,}@[a-z]{2,}\.[a-z]{2,3}$
+ 1. Email: ^[a-z]{1,1}\.[a-z]{2,}@[a-z]{2,}\.[a-z]{2,3}$
 - This pattern checks if the input is a valid email address.
 - The email should start with a lowercase letter followed by a dot.
 - After the dot, there should be at least two lowercase letters.
 - The "@" symbol should follow next.
 - After the "@", there should be at least two lowercase letters, followed by a dot.
 - Finally, there should be between two to three lowercase letters.
+<<<<<<< HEAD
 ### 2. Password: ^(?=.*\d)(?=.*[A-Z]).{8,}$
+=======
+- 
+ 2. Password: ^(?=.*\d)(?=.*[A-Z]).{8,}$
+>>>>>>> 959c25744be72995e4519b61d55bf45d422f0e24
 
 - This pattern checks for a valid password.
 - The password should be at least 8 characters long.
 - It should contain at least one digit (?=.*\d).
 - It should contain at least one uppercase letter (?=.*[A-Z]).
-### 3. Phone number: ^06[-\s]?\d{8}$ or empty
+ 3. Phone number: ^06[-\s]?\d{8}$ or empty
 
 - This pattern checks for a valid Dutch phone number or an empty input.
 - The phone number should start with "06" followed by an optional dash or space, and then 8 digits.
+
 ## :airplane: Deployment
 
 The API server has been deployed and can be accessed at `https://share-a-meal-api-server.up.railway.app`. 
@@ -120,3 +142,4 @@ The API server has been deployed and can be accessed at `https://share-a-meal-ap
 You can use the same endpoints as described in the "API Endpoints" section, just replace `http://localhost:3000` with the deployment URL.
 
 For example, to get all users, you can send a GET request to `https://share-a-meal-api-server.up.railway.app/api/user`.
+
