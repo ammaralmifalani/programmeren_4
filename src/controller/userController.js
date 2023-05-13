@@ -7,25 +7,33 @@ const logger = require('../test/utils/utils').logger;
 const userController = {
   // getAllUsers retrieves all users from the database
   getAllUsers: (req, res, next) => {
-    logger.info('Get all users');
+    logger.trace('Get all users');
 
+    const queryField = Object.entries(req.query);
     let sqlStatement = 'SELECT * FROM `user`';
-    // Hier wil je misschien iets doen met mogelijke filterwaarden waarop je zoekt.
-    if (req.query.isactive) {
-      // voeg de benodigde SQL code toe aan het sql statement
-      // bv sqlStatement += " WHERE `isActive=?`"
+    let params = [];
+
+    if (queryField.length === 2) {
+      logger.trace(
+        'Dit is field 1 = ' + queryField[0][0] + ' = ' + queryField[0][1]
+      );
+      sqlStatement += ` WHERE \`${queryField[0][0]}\` = ? AND \`${queryField[1][0]}\` = ?`;
+      params.push(queryField[0][1]);
+      params.push(queryField[1][1]);
+    } else if (queryField.length === 1) {
+      sqlStatement += ` WHERE \`${queryField[0][0]}\` = ?`;
+      params.push(queryField[0][1]);
     }
 
     dbconnection.getConnection(function (err, conn) {
-      // Do something with the connection
       if (err) {
-        console.log('error', err);
+        logger.err('error', err);
         next('error: ' + err.message);
       }
       if (conn) {
-        conn.query(sqlStatement, function (err, results, fields) {
+        conn.query(sqlStatement, params, function (err, results, fields) {
           if (err) {
-            logger.err(err.message);
+            logger.trace(err.message);
             next({
               status: 409,
               message: err.message,
@@ -36,7 +44,7 @@ const userController = {
             logger.info('Found', results.length, 'results');
             res.status(200).json({
               status: 200,
-              message: 'User getAll endpoint',
+              message: 'Get All Users.',
               data: results,
             });
           }
@@ -45,89 +53,114 @@ const userController = {
       }
     });
   },
+  validateUser: (req, res, next) => {
+    let user = req.body;
+    logger.info('Validating user');
+
+    // Check if firstName exists, is a string, and is not an empty string
+    if (
+      !user.firstName ||
+      typeof user.firstName !== 'string' ||
+      user.firstName.trim() === ''
+    ) {
+      return res.status(400).json({
+        status: 400,
+        message: 'Invalid first name.',
+        data: {},
+      });
+    }
+
+    // Check if lastName exists, is a string, and is not an empty string
+    if (
+      !user.lastName ||
+      typeof user.lastName !== 'string' ||
+      user.lastName.trim() === ''
+    ) {
+      return res.status(400).json({
+        status: 400,
+        message: 'Invalid last name.',
+        data: {},
+      });
+    }
+
+    // Check if password exists, is a string, is not an empty string, and passes password validation
+    if (
+      !user.password ||
+      typeof user.password !== 'string' ||
+      user.password.trim() === '' ||
+      !fun.validatePassword(user.password)
+    ) {
+      return res.status(400).json({
+        status: 400,
+        message: 'Invalid password.',
+        data: {},
+      });
+    }
+
+    // Check if street exists, is a string, and is not an empty string
+    if (
+      !user.street ||
+      typeof user.street !== 'string' ||
+      user.street.trim() === ''
+    ) {
+      return res.status(400).json({
+        status: 400,
+        message: 'Invalid street.',
+        data: {},
+      });
+    }
+
+    // Check if city exists, is a string, and is not an empty string
+    if (
+      !user.city ||
+      typeof user.city !== 'string' ||
+      user.city.trim() === ''
+    ) {
+      return res.status(400).json({
+        status: 400,
+        message: 'Invalid city.',
+        data: {},
+      });
+    }
+
+    // Check if emailAdress exists, is a string, is not an empty string, and passes email validation
+    if (
+      !user.emailAdress ||
+      typeof user.emailAdress !== 'string' ||
+      user.emailAdress.trim() === '' ||
+      !fun.validateEmail(user.emailAdress)
+    ) {
+      return res.status(400).json({
+        status: 400,
+        message: 'Invalid email address.',
+        data: {},
+      });
+    }
+    //Check if phoneNumber exists, is a string, is not an empty string, and passes phone number validation
+    if (!fun.validatePhoneNumber(user.phoneNumber)) {
+      return res.status(400).json({
+        status: 400,
+        message: 'Invalid phone number.',
+        data: {},
+      });
+    }
+
+    // If all checks pass, proceed to the next middleware function
+    next();
+  },
   // CreateUser creates a new user and adds it to the database
   createUser: (req, res) => {
+    logger.trace('Create User');
     const newUser = ({
       firstName,
       lastName,
-      isActive,
       emailAdress,
       password,
-      phoneNumber,
-      roles,
       street,
       city,
     } = req.body);
     logger.debug('user = ', newUser);
 
-    // validation of email address
-    if (!fun.validateEmail(newUser.emailAdress)) {
-      return res.status(400).json({
-        status: 400,
-        message: 'Invalid email address',
-        data: {},
-      });
-    }
-
-    // Validation of phone number
-    if (newUser.phoneNumber) {
-      if (!fun.validatePhoneNumber(newUser.phoneNumber)) {
-        return res.status(400).json({
-          status: 400,
-          message: 'Invalid phone number. Phone number must be 10 digits long.',
-          data: {},
-        });
-      }
-    }
-
-    // Validation of password
-
-    if (!fun.validatePassword(newUser.password)) {
-      return res.status(400).json({
-        status: 400,
-        message:
-          'Invalid password. The password must be at least 8 characters long, contain an uppercase letter, a lowercase letter, a number and a special character.',
-        data: {},
-      });
-    }
-
-    if (
-      !newUser.firstName ||
-      !newUser.lastName ||
-      !newUser.emailAdress ||
-      !newUser.password ||
-      !newUser.street ||
-      !newUser.city
-    ) {
-      return res.status(400).json({
-        status: 400,
-        message: 'Required fields missing',
-        data: {},
-      });
-    }
-    // Validate the types of fields
-    const fieldTypes = {
-      firstName: 'string',
-      lastName: 'string',
-      emailAdress: 'string',
-      password: 'string',
-      phoneNumber: 'string',
-      street: 'string',
-      city: 'string',
-    };
-
-    for (const field in fieldTypes) {
-      const expectedType = fieldTypes[field];
-      const actualType = typeof newUser[field];
-
-      if (actualType !== expectedType) {
-        return res.status(400).json({
-          status: 400,
-          message: `Invalid field type: ${field} should be of type ${expectedType}, but it is of type ${actualType}.`,
-          data: {},
-        });
-      }
-    }
     dbconnection.getConnection(function (err, connection) {
       if (err) throw err; // not connected!
 
@@ -180,7 +213,7 @@ const userController = {
               // Send the fetched user data to the client
               res.status(201).json({
                 status: 201,
-                message: `User with email address ${newUser.emailAdress} is registered`,
+                message: 'User successfully registered.',
                 data: fetchResults[0], // assuming the query returns an array
               });
             }
@@ -189,321 +222,340 @@ const userController = {
       });
     });
   },
-  // deleteUser deletes a user from the database based on their email and password
-  deleteUser: (req, res, next) => {
-    logger.info('Deleting user');
-    let sqlStatement = 'SELECT * FROM `user` WHERE  emailAdress=?';
-    let emailAdress = req.body.emailAdress;
-    logger.info('emailAddress =', emailAdress);
-    dbconnection.getConnection(function (err, conn) {
-      if (err) {
-        console.log('error', err);
-        next('error: ' + err.message);
-      }
-      if (conn) {
-        conn.query(
-          sqlStatement,
-          [emailAdress],
-          function (err, results, fields) {
-            if (err) {
-              logger.error(err.message);
-              next({
-                status: 409,
-                message: err.message,
-              });
-              return;
-            }
-            if (results.length === 0) {
-              logger.error('Email address is incorrect');
-              res.status(404).json({
-                status: 404,
-                message: 'user not found',
-                data: {},
-              });
-              return;
-            }
+  validateUpdate: (req, res, next) => {
+    let user = req.body;
+    logger.info('Validating update for user with id: ', req.userId);
 
-            let deletedUser = results[0];
-            sqlStatement = 'DELETE FROM `user` WHERE  emailAdress=?';
-            conn.query(
-              sqlStatement,
-              [emailAdress],
-              function (err, results, fields) {
-                if (err) {
-                  logger.error(err.message);
-                  next({
-                    status: 409,
-                    message: err.message,
-                  });
-                  return;
-                }
-                if (results) {
-                  logger.info('Deleted user with emailAdress', emailAdress);
-                  res.status(200).json({
-                    status: 200,
-                    message: 'User deleted successfully',
-                    data: deletedUser,
-                  });
-                }
-              }
-            );
-          }
-        );
-        dbconnection.releaseConnection(conn);
-      }
-    });
-  },
-  // updateUser updates a user's information in the database based on their email and password
-  updateUser: (req, res) => {
-    const { emailAdress, updateData } = req.body;
-    console.log('Request body:', req.body);
-
-    dbconnection.getConnection((err, connection) => {
-      if (err) throw err;
-
-      const getUserSql = 'SELECT * FROM user WHERE emailAdress = ?';
-      connection.query(getUserSql, [emailAdress], (error, results) => {
-        if (error) {
-          connection.release();
-          throw error;
-        }
-        logger.debug('Query result:', results);
-
-        if (results.length === 0) {
-          connection.release();
-          return res.status(404).json({
-            status: 404,
-            message: 'User is not found',
-            data: {},
-          });
-        }
-
-        const user = results[0];
-        const { firstName, lastName, street, city, newPassword, phoneNumber } =
-          updateData;
-
-        const updatedUser = {
-          ...user,
-          firstName: firstName || user.firstName,
-          lastName: lastName || user.lastName,
-          street: street || user.street,
-          city: city || user.city,
-        };
-        // Check if phoneNumber is present in the updateData and update it even if it is empty
-        if (phoneNumber !== undefined) {
-          updatedUser.phoneNumber = phoneNumber;
-        }
-        if (firstName && typeof firstName !== 'string') {
-          connection.release();
-          return res.status(400).json({
-            status: 400,
-            message: 'first name should be text.',
-            data: {},
-          });
-        }
-
-        if (lastName && typeof lastName !== 'string') {
-          connection.release();
-          return res.status(400).json({
-            status: 400,
-            message: 'Last name should be a text.',
-            data: {},
-          });
-        }
-
-        if (street && typeof street !== 'string') {
-          connection.release();
-          return res.status(400).json({
-            status: 400,
-            message: 'Street should be a text.',
-            data: {},
-          });
-        }
-
-        if (city && typeof city !== 'string') {
-          connection.release();
-          return res.status(400).json({
-            status: 400,
-            message: 'City should be a text.',
-            data: {},
-          });
-        }
-        if (newPassword) {
-          if (!fun.validatePassword(newPassword)) {
-            connection.release();
-            return res.status(400).json({
-              status: 400,
-              message:
-                'Invalid password. The password must be at least 8 characters long, contain an uppercase letter, a lowercase letter, a number and a special character.',
-              data: {},
-            });
-          } else {
-            updatedUser.password = newPassword;
-          }
-        }
-        if (phoneNumber && !fun.validatePhoneNumber(phoneNumber)) {
-          connection.release();
-          return res.status(400).json({
-            status: 400,
-            message:
-              'Invalid phone number. Phone number must be 10 digits long.',
-            data: {},
-          });
-        }
-
-        const updateSql = `
-          UPDATE user
-          SET firstName = ?, lastName = ?, street = ?, city = ?, password = ?, phoneNumber = ?
-          WHERE emailAdress = ?
-        `;
-        const updateValues = [
-          updatedUser.firstName,
-          updatedUser.lastName,
-          updatedUser.street,
-          updatedUser.city,
-          updatedUser.password,
-          updatedUser.phoneNumber,
-          emailAdress,
-        ];
-
-        connection.query(updateSql, updateValues, (updateError) => {
-          connection.release();
-
-          if (updateError) {
-            throw updateError;
-          } else {
-            res.status(200).json({
-              status: 200,
-              message: 'User information updated successfully',
-              data: updatedUser,
-            });
-          }
-        });
-      });
-    });
-  },
-  // getUserProfile retrieves a user's profile information based on their email and password
-  getUserProfile: (req, res) => {
-    const emailAdress = req.body.emailAdress;
-
-    if (!fun.validateEmail(emailAdress)) {
+    // Check if firstName exists, is a string, and is not an empty string
+    if (
+      !user.firstName ||
+      typeof user.firstName !== 'string' ||
+      user.firstName.trim() === ''
+    ) {
       return res.status(400).json({
         status: 400,
-        message: 'Email address not valid',
+        message: 'Invalid first name.',
         data: {},
       });
     }
 
-    dbconnection.getConnection(function (err, connection) {
-      if (err) throw err;
+    // Check if lastName exists, is a string, and is not an empty string
+    if (
+      !user.lastName ||
+      typeof user.lastName !== 'string' ||
+      user.lastName.trim() === ''
+    ) {
+      return res.status(400).json({
+        status: 400,
+        message: 'Invalid last name.',
+        data: {},
+      });
+    }
 
-      const userSql = 'SELECT * FROM user WHERE emailAdress = ?';
+    // Check if password exists, is a string, is not an empty string, and passes password validation
+    if (
+      !user.password ||
+      typeof user.password !== 'string' ||
+      user.password.trim() === '' ||
+      !fun.validatePassword(user.password)
+    ) {
+      return res.status(400).json({
+        status: 400,
+        message: 'Invalid password.',
+        data: {},
+      });
+    }
+
+    // Check if street exists, is a string, and is not an empty string
+    if (
+      !user.street ||
+      typeof user.street !== 'string' ||
+      user.street.trim() === ''
+    ) {
+      return res.status(400).json({
+        status: 400,
+        message: 'Invalid street.',
+        data: {},
+      });
+    }
+
+    // Check if city exists, is a string, and is not an empty string
+    if (
+      !user.city ||
+      typeof user.city !== 'string' ||
+      user.city.trim() === ''
+    ) {
+      return res.status(400).json({
+        status: 400,
+        message: 'Invalid city.',
+        data: {},
+      });
+    }
+
+    // Check if emailAdress exists, is a string, is not an empty string, and passes email validation
+    if (
+      !user.emailAdress ||
+      typeof user.emailAdress !== 'string' ||
+      user.emailAdress.trim() === '' ||
+      !fun.validateEmail(user.emailAdress)
+    ) {
+      return res.status(400).json({
+        status: 400,
+        message: 'Invalid email address.',
+        data: {},
+      });
+    }
+
+    //Check if phoneNumber exists, is a string, is not an empty string, and passes phone number validation
+    if (!fun.validatePhoneNumber(user.phoneNumber)) {
+      return res.status(400).json({
+        status: 400,
+        message: 'Invalid phone number.',
+        data: {},
+      });
+    }
+
+    // If all checks pass, proceed to the next middleware function
+    next();
+  },
+  // deleteUser deletes a user from the database
+  deleteUser: (req, res, next) => {
+    let id = req.params.id;
+    let userId = req.userId;
+    logger.info('Deleting user with id: ', id);
+
+    dbconnection.getConnection(function (error, connection) {
+      if (error) {
+        logger.error('Error executing SELECT query:', error);
+        throw err;
+      }
 
       connection.query(
-        userSql,
-        [emailAdress],
-        function (error, userResults, fields) {
-          connection.release();
-          if (error) throw error;
-
-          if (userResults.length === 0) {
-            res.status(404).json({
-              status: 404,
+        'SELECT * FROM user WHERE id = ?',
+        [id],
+        function (error, results, fields) {
+          if (error) {
+            logger.error('Error executing SELECT query:', error);
+            throw err;
+          }
+          logger.trace('User select results:', results);
+          if (results.length > 0) {
+            if (userId == id) {
+              connection.query(
+                `DELETE  FROM user WHERE id = ?`,
+                [id],
+                function (error, results, fields) {
+                  if (error) {
+                    logger.error('Error executing SELECT query:', error);
+                    throw error;
+                  }
+                  connection.release();
+                  logger.trace('User delete results:', results);
+                  if (results.affectedRows > 0) {
+                    res.status(200).json({
+                      status: 200,
+                      message: 'User successfully deleted',
+                      data: {},
+                    });
+                  }
+                }
+              );
+            } else {
+              const error = {
+                status: 403,
+                message: 'Logged in user is not allowed to delete this user.',
+                data: {},
+              };
+              next(error);
+            }
+          } else {
+            const error = {
+              status: 400,
               message: 'User not found',
               data: {},
-            });
-          } else {
-            const user = userResults[0];
-            const userDetails = {
-              id: user.id,
-              firstName: user.firstName,
-              lastName: user.lastName,
-              emailAdress: user.emailAdress,
-              password: user.password,
-              street: user.street,
-              city: user.city,
-              phoneNumber: user.phoneNumber,
             };
-            res.status(200).json({
-              status: 200,
-              message: 'Profile data retrieved',
-              data: userDetails,
-            });
+            next(error);
           }
         }
       );
     });
   },
-  // getUserById retrieves a user's public information and associated meals based on their user ID
-  getUserById: (req, res) => {
-    const { id } = req.params;
-
-    if (isNaN(id)) {
-      return res.status(400).json({
-        status: 400,
-        message: 'Invalid user ID',
-        data: {},
-      });
-    }
+  // updateUser updates a user's information in the database
+  updateUser: (req, res, next) => {
+    let id = req.params.id;
+    let {
+      firstName,
+      lastName,
+      emailAdress,
+      password,
+      phoneNumber,
+      street,
+      city,
+    } = req.body;
 
     dbconnection.getConnection(function (err, connection) {
       if (err) throw err;
 
-      const userSql =
-        'SELECT firstName, lastName, emailAdress, phoneNumber,roles,isActive FROM user WHERE id = ?';
-      const mealSql = 'SELECT * FROM meal WHERE CookID = ?';
+      // Use the connection
+      connection.query(
+        'SELECT * FROM user WHERE id = ?',
+        [id],
+        function (error, results, fields) {
+          if (error) throw error;
 
-      connection.query(userSql, [id], function (error, userResults, fields) {
-        if (error) throw error;
+          // Check if user exists
+          if (results.length === 0) {
+            return res.status(404).json({
+              status: 404,
+              message: 'User not found',
+              data: {},
+            });
+          }
 
-        if (userResults.length === 0) {
-          connection.release();
-          res.status(404).json({
-            status: 404,
-            message: 'User not found',
-            data: {},
+          // Check if user is updating their own profile
+          if (id != req.userId) {
+            return res.status(403).json({
+              status: 403,
+              message: 'You can only update your own profile',
+              data: {},
+            });
+          }
+
+          const sql = `
+          UPDATE user 
+          SET firstName = ?, lastName = ?, emailAdress = ?, password = ?, phoneNumber = ?, street = ?, city = ?
+          WHERE id = ?
+        `;
+          const values = [
+            firstName,
+            lastName,
+            emailAdress,
+            password,
+            phoneNumber,
+            street,
+            city,
+            id,
+          ];
+
+          connection.query(sql, values, function (error, results, fields) {
+            if (error) throw error;
+
+            // Get the updated user details
+            connection.query(
+              'SELECT * FROM user WHERE id = ?',
+              [id],
+              function (error, results, fields) {
+                if (error) throw error;
+
+                // User was updated successfully
+                res.status(200).json({
+                  status: 200,
+                  message: `User successfully updated`,
+                  data: results[0],
+                });
+
+                connection.release();
+              }
+            );
           });
-        } else {
-          connection.query(
-            mealSql,
-            [id],
-            function (error, mealResults, fields) {
-              connection.release();
-
-              if (error) throw error;
-
-              const meals = mealResults.map((result) => {
-                return {
-                  id: result.id,
-                  name: result.name,
-                  description: result.description,
-                  dateTime: result.dateTime,
-                  maxAmountOfParticipants: result.maxAmountOfParticipants,
-                  price: result.price,
-                  imageUrl: result.imageUrl,
-                  cookId: result.cookId,
-                  createDate: result.createDate,
-                  updateDate: result.updateDate,
-                  allergenes: result.allergenes,
-                  isVega: result.isVega,
-                  isVegan: result.isVegan,
-                  isToTakeHome: result.isToTakeHome,
-                };
-              });
-
-              const userData = { ...userResults[0], meals };
-
-              res.status(200).json({
-                status: 200,
-                message: 'User found',
-                data: userData,
-              });
-            }
-          );
         }
-      });
+      );
     });
   },
+
+  // getUserProfile retrieves a user's profile information based on their email and password
+  getUserProfile: (req, res, next) => {
+    let id = req.userId;
+    logger.info('Getting profile for user with id: ', id);
+
+    if (id) {
+      dbconnection.getConnection(function (err, connection) {
+        if (err) throw err;
+
+        connection.query(
+          'SELECT * FROM user WHERE id = ?;',
+          [id],
+          function (error, results, fields) {
+            connection.release();
+            if (error) throw error;
+
+            if (results.length > 0) {
+              res.status(200).json({
+                status: 200,
+                message: 'User profile retrieved successfully',
+                data: results[0],
+              });
+            } else {
+              const err = {
+                status: 404,
+                message: 'User not found',
+                data: {},
+              };
+              next(err);
+            }
+          }
+        );
+      });
+    } else {
+      const error = {
+        status: 401,
+        message: 'No user logged in',
+        data: {},
+      };
+      next(error);
+    }
+  },
+  // getUserById retrieves a user's public information and associated meals based on their user ID
+  getUserById: (req, res, next) => {
+    let requestedUserId = req.params.id;
+    logger.info('Requested user id: ', requestedUserId);
+
+    dbconnection.getConnection(function (err, connection) {
+      if (err) throw err;
+
+      const userQuery =
+        'SELECT firstName, lastName, emailAdress, phoneNumber, city, street,isActive,roles FROM user WHERE id = ?;';
+      connection.query(
+        userQuery,
+        [requestedUserId],
+        function (error, userResults, fields) {
+          if (error) {
+            throw error;
+          }
+          // TODO: meals die active zijn
+          if (userResults.length > 0) {
+            const mealsQuery = 'SELECT * FROM meal WHERE cookId = ?';
+            connection.query(
+              mealsQuery,
+              [requestedUserId],
+              function (mealError, mealResults, mealFields) {
+                if (mealError) throw mealError;
+
+                res.status(200).json({
+                  status: 200,
+                  message: 'User found',
+                  data: {
+                    user: userResults[0],
+                    meals: mealResults,
+                  },
+                });
+              }
+            );
+          } else {
+            const error = {
+              status: 404,
+              message: 'User not found',
+              data: {},
+            };
+            next(error);
+          }
+
+          connection.release();
+        }
+      );
+    });
+  },
+
   // getTableLength retrieves the length of a table from the database
   getTableLength: (tableName, callback) => {
     dbconnection.getConnection((err, connection) => {

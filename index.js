@@ -32,7 +32,7 @@ app.get('/api/info', (req, res) => {
 
 // Refer to routes defined in userRouter
 app.use('/api/user', userRouter);
-app.use('/api/meal',mealRouter);
+app.use('/api/meal', mealRouter);
 app.use('/api', authRouter);
 
 // app.get('api/user', (req, res) => {
@@ -80,11 +80,11 @@ app.use('*', (req, res) => {
 });
 
 // Express error handler
-app.use((err, req, res, next) => {
-  logger.error(err.code, err.message);
-  res.status(err.code).json({
-    statusCode: err.code,
-    message: err.message,
+app.use((error, req, res, next) => {
+  logger.error(error.status, error.message);
+  res.status(error.status).json({
+    status: error.status,
+    message: error.message,
     data: {},
   });
 });

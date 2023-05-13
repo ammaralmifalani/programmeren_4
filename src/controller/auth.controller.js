@@ -94,7 +94,7 @@ module.exports = {
       return res.status(400).json({
         status: 400,
         message: 'Invalid email address.',
-        data: new Date().toISOString(),
+        data: {},
       });
     }
 
@@ -108,7 +108,7 @@ module.exports = {
       return res.status(400).json({
         status: 400,
         message: 'Invalid password.',
-        data: new Date().toISOString(),
+        data: {},
       });
     }
 
@@ -123,7 +123,7 @@ module.exports = {
       next({
         status: 401,
         message: 'Authorization header missing!',
-        data: undefined,
+        data: {},
       });
     } else {
       const token = authHeader.split(' ')[1]; // Extract token from 'Bearer [token]'
@@ -131,8 +131,8 @@ module.exports = {
         if (err) {
           next({
             status: 401,
-            message: 'Token is not valid!',
-            data: undefined,
+            message: 'Invalid token.',
+            data: {},
           });
         } else {
           req.userId = payload.userId; // Attach userId from payload to request object
