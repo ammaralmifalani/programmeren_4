@@ -43,9 +43,7 @@ Create a `.env` file in the root folder of the project and add the following var
  DB_DATABASE=<your_database_name>
 ```
 ### :cd: Step 5: Start the database
-
- [XAMPP](https://www.apachefriends.org/index.html)
- 
+Start your MySQL database. If you're using a local development environment like [XAMPP](https://www.apachefriends.org/index.html), ensure the MySQL service is running. 
 ### :rocket: Step 6: Start the API Server
 
 ```bash
