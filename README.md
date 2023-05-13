@@ -27,8 +27,8 @@ or
  mysql -u root
 ```
 ```sql
-  CREATE DATABASE <your_database_name>;
-  USE <your_database_name>;
+  CREATE DATABASE `<your_database_name>`;
+  USE `<your_database_name>`;
   SOURCE share-a-meal.sql;
 ```
 ### :memo: Step 4: Configure Environment Variables
