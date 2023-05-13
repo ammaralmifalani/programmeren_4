@@ -27,8 +27,11 @@ Create a new MySQL database for your project and import the share-a-meal.sql fil
 
 Create a `.env` file in the root folder of the project and add the following variables, using your own values:
 ```bash
-DB_HOST=<your_database_host>
-DB_PORT=<your_database_port> DB_USER=<your_database_user> DB_PASSWORD=<your_database_password> DB_DATABASE=<your_database_name>
+- DB_HOST=<your_database_host>
+- DB_PORT=<your_database_port> 
+- DB_USER=<your_database_user> 
+- DB_PASSWORD=<your_database_password>
+- DB_DATABASE=<your_database_name>
 ```
 ### :cd: Step 5: Start the database
 ```bash
@@ -60,7 +63,7 @@ To run tests, run the following command
 
 The following endpoints require a request body:
 
-  -`POST /api/user`: Create a new user (fields with an asterisk are required)
+- `POST /api/user`: Create a new user (fields with an asterisk are required)
 
 ````json
 {
@@ -73,7 +76,7 @@ The following endpoints require a request body:
     "city": "Amsterdam" *
 }
 ````
-- `PUT /api/user/:id`: Update an existing user based on email address 
+- `PUT /api/user/:id`: Update an existing user based on a valid token.  
 
 ````json 
 {
@@ -100,7 +103,6 @@ We use regular expressions (regex) to validate user input. Here's an explanation
 - The "@" symbol should follow next.
 - After the "@", there should be at least two lowercase letters, followed by a dot.
 - Finally, there should be between two to three lowercase letters.
-- 
 ### 2. Password: ^(?=.*\d)(?=.*[A-Z]).{8,}$
 
 - This pattern checks for a valid password.
