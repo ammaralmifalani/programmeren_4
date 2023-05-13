@@ -34,9 +34,9 @@ Create a `.env` file in the root folder of the project and add the following var
 - DB_DATABASE=<your_database_name>
 ```
 ### :cd: Step 5: Start the database
-```bash
+
  [XAMPP](https://www.apachefriends.org/index.html)
- ```
+ 
 ### :rocket: Step 6: Start the API Server
 
 ```bash
