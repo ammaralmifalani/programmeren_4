@@ -104,7 +104,7 @@ The following endpoints require a request body:
 ````
 ## :mag: Regular Expressions
 We use regular expressions (regex) to validate user input. Here's an explanation of the regex patterns we're using:
-
+```regex
 ### 1. Email: ^[a-z]{1,1}\.[a-z]{2,}@[a-z]{2,}\.[a-z]{2,3}$
 - This pattern checks if the input is a valid email address.
 - The email should start with a lowercase letter followed by a dot.
@@ -123,6 +123,7 @@ We use regular expressions (regex) to validate user input. Here's an explanation
 
 - This pattern checks for a valid Dutch phone number or an empty input.
 - The phone number should start with "06" followed by an optional dash or space, and then 8 digits.
+```
 ## :airplane: Deployment
 
 The API server has been deployed and can be accessed at `https://share-a-meal-api-server.up.railway.app`. 
