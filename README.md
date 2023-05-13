@@ -35,7 +35,7 @@ or
 ### :memo: Step 4: Configure Environment Variables
 
 Create a `.env` file in the root folder of the project and add the following variables, using your own values:
-```bash
+```env
 - DB_HOST=<your_database_host>
 - DB_PORT=<your_database_port> 
 - DB_USER=<your_database_user> 
