@@ -15,6 +15,8 @@ git clone https://github.com/ammaralmifalani/shareameal_api_server.git
 Navigate to the project folder and install the required packages:
 ```bash
 cd share_a_meal_server
+```
+```javascript
 npm install
 ```
 ### :floppy_disk: Step 3: Import Database Structure
@@ -45,13 +47,13 @@ Create a `.env` file in the root folder of the project and add the following var
 Start your MySQL database. If you're using a local development environment like [XAMPP](https://www.apachefriends.org/index.html), ensure the MySQL service is running. 
 ### :rocket: Step 6: Start the API Server
 
-```bash
+```javascript
   npm run dev
 ```
 The server should now be running at `http://localhost:3000` or the port you specified in your `.env` file.
 ## :microscope: Running Tests
 To run tests, run the following command
-```bash
+```javascript
   npm run test
 ```
 ## :link: API Endpoints
