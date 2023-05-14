@@ -21,7 +21,7 @@ npm install
 ```
 ### :floppy_disk: Step 3: Import Database Structure
 Create a new MySQL database for your project and import the share-a-meal.sql file to set up the necessary tables and structures:
-```bash
+```sh
  mysql -u <your_database_user> -p <your_database_name> < share-a-meal.sql
 ``` 
 or 
