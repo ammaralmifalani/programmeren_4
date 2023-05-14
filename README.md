@@ -16,7 +16,7 @@ Navigate to the project folder and install the required packages:
 ```bash
 cd share_a_meal_server
 ```
-```javascript
+```js
 npm install
 ```
 ### :floppy_disk: Step 3: Import Database Structure
@@ -47,13 +47,13 @@ Create a `.env` file in the root folder of the project and add the following var
 Start your MySQL database. If you're using a local development environment like [XAMPP](https://www.apachefriends.org/index.html), ensure the MySQL service is running. 
 ### :rocket: Step 6: Start the API Server
 
-```javascript
+```js
   npm run dev
 ```
 The server should now be running at `http://localhost:3000` or the port you specified in your `.env` file.
 ## :microscope: Running Tests
 To run tests, run the following command
-```javascript
+```js
   npm run test
 ```
 ## :link: API Endpoints
@@ -72,7 +72,7 @@ The following endpoints require a request body:
 
 - `POST /api/user`: Create a new user (fields with an asterisk are required)
 
-````json
+```json
 {
     "firstName": "John", *
     "lastName": "Doe", *
@@ -82,10 +82,10 @@ The following endpoints require a request body:
     "street": "Main Street 123", *
     "city": "Amsterdam" *
 }
-````
+```
 - `PUT /api/user/:id`: Update an existing user based on a valid token.  
 
-````json 
+```json 
 {
     "updateData": {
       "firstName": "John", 
@@ -99,7 +99,7 @@ The following endpoints require a request body:
       "city": "Amsterdam" *
     }
 }
-````
+```
 ## :airplane: Deployment
 
 The API server has been deployed and can be accessed at `https://share-a-meal-api-server.up.railway.app`. 
