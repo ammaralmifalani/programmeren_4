@@ -16,7 +16,6 @@ let token = '';
  * moet je de optie 'multipleStatements: true' in de database config hebben staan.
  */
 
-
 const CLEAR_MEAL_TABLE = 'DELETE IGNORE FROM `meal`;';
 const CLEAR_PARTICIPANTS_TABLE = 'DELETE IGNORE FROM `meal_participants_user`;';
 const CLEAR_USERS_TABLE = 'DELETE IGNORE FROM `user`;';
@@ -53,6 +52,21 @@ describe('User API', () => {
       );
     });
   });
+  // afterEach((done) => {
+  //   dbconnection.getConnection(function (err, connection) {
+  //     if (err) throw err;
+  //     connection.query(
+  //       CLEAR_DB + INSERT_USER,
+  //       INSERT_MEALS,
+  //       function (error, results, fields) {
+  //         connection.release();
+
+  //         if (error) throw error;
+  //         done();
+  //       }
+  //     );
+  //   });
+  // });
   describe('UC-101 | Login', () => {
     it('TC-101-1 | Required field is missing', (done) => {
       chai
@@ -177,7 +191,7 @@ describe('User API', () => {
           res.body.should.be.an('object');
           let { status, message, data } = res.body;
           status.should.eql(400);
-          message.should.be.a('string').eql('Invalid password.');
+          message.should.be.a('string').eql('password is missing.');
           Object.keys(data).length.should.be.equal(0);
           done();
         });
@@ -282,7 +296,6 @@ describe('User API', () => {
       chai
         .request(app)
         .get('/api/user')
-        .set('Authorization', `Bearer ${token}`)
         .end((err, res) => {
           res.body.should.be.an('object');
           let { status, message, data } = res.body;
@@ -661,45 +674,21 @@ describe('User API', () => {
           done();
         });
     });
-
     it('TC-206-4 | User successfully deleted', (done) => {
       chai
         .request(app)
         .delete('/api/user/1')
         .set('Authorization', `Bearer ${token}`)
         .end((err, res) => {
-          if (err) {
-            logger.error('Error occurred:', err);
-            done(err); // Roep done() aan met de fout als er een fout optreedt
-          } else {
-            // Voer je testverificaties uit
-            logger.debug('Response received:', res.body);
-            res.body.should.be.an('object');
-            let { status, message, data } = res.body;
-            status.should.eql(200);
-            message.should.be.a('string').eql('User successfully deleted');
-            Object.keys(data).length.should.be.equal(0);
-            logger.debug('Called done()');
-            done(); // Roep done() aan om aan te geven dat de test is voltooid
-          }
+          logger.trace('Received response:', res.body);
+          res.body.should.be.an('object');
+          let { status, message, data } = res.body;
+          status.should.eql(200);
+          message.should.be.a('string').eql('User successfully deleted');
+          Object.keys(data).length.should.be.equal(0);
+          logger.trace('Calling done()');
+          done();
         });
     });
-
-    // it('TC-206-4 | User successfully deleted', (done) => {
-    //   chai
-    //     .request(app)
-    //     .delete('/api/user/1')
-    //     .set('Authorization', `Bearer ${token}`)
-    //     .end((err, res) => {
-    //       logger.trace('Received response:', res.body);
-    //       res.body.should.be.an('object');
-    //       let { status, message, data } = res.body;
-    //       status.should.eql(200);
-    //       message.should.be.a('string').eql('User successfully deleted');
-    //       Object.keys(data).length.should.be.equal(0);
-    //       logger.trace('Calling done()');
-    //       done();
-    //     });
-    // });
   });
 });
