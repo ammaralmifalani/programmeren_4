@@ -254,123 +254,195 @@ const mealController = {
       }
     });
   },
-  // deleteUser deletes a user from the database based on their email and password
+  // deleteMeal deletes a meal from the database
   deleteMeal: (req, res, next) => {
-    const mealId = req.params.id;
-    logger.trace('Deleting meal', mealId);
-    let sqlStatement = 'DELETE * FROM `meal` WHERE  id=? AND cookId = ?';
-    let userId = req.userId;
-    logger.trace('userId =', userId);
+    const mealId = req.params.mealId;
+    const userId = req.userId;
+    logger.debug('Deleting meal with id: ', mealId);
+
+    dbconnection.getConnection(function (err, connection) {
+      if (err) {
+        logger.error('Error getting database connection:', err);
+        next(err);
+        return;
+      }
+
+      connection.query(
+        'SELECT * FROM `meal` WHERE id = ?',
+        [mealId],
+        function (err, results) {
+          if (err) {
+            logger.error('Error executing SELECT query:', err);
+            connection.release();
+            next(err);
+            return;
+          }
+
+          if (results.length > 0) {
+            if (results[0].cookId !== userId) {
+              connection.release();
+              next({
+                status: 403,
+                message: 'Not authorized to delete this meal',
+                data: {},
+              });
+              return;
+            }
+
+            connection.query(
+              'DELETE FROM meal WHERE id = ? AND cookId = ?',
+              [mealId, userId],
+              function (err, results) {
+                if (err) {
+                  logger.error('Error executing DELETE query:', err);
+                  next(err);
+                  return;
+                }
+                connection.release();
+
+                if (results.affectedRows > 0) {
+                  res.status(200).json({
+                    status: 200,
+                    message: 'Meal successfully deleted',
+                    data: {},
+                  });
+                }
+              }
+            );
+          } else {
+            connection.release();
+            next({
+              status: 404,
+              message: 'Meal not found',
+              data: {},
+            });
+          }
+        }
+      );
+    });
+  },
+
+  // updateUser updates a user's information in the database
+  updateMeal: (req, res, next) => {},
+  // getMealById
+  getMealById: (req, res, next) => {
+    const requestedMealId = req.params.mealId;
+    logger.info('Requested meal id: ', requestedMealId);
+
+    let sqlStatement = `
+      SELECT 
+        meal.*,
+        cook.id as cookId,
+        cook.firstName as cookFirstName,
+        cook.lastName as cookLastName,
+        cook.isActive as cookIsActive,
+        cook.emailAdress as cookEmailAdress,
+        cook.phoneNumber as cookPhoneNumber,
+        cook.roles as cookRoles,
+        cook.street as cookStreet,
+        cook.city as cookCity,
+        participant.id as participantId,
+        participant.firstName as participantFirstName,
+        participant.lastName as participantLastName,
+        participant.isActive as participantIsActive,
+        participant.emailAdress as participantEmailAdress,
+        participant.phoneNumber as participantPhoneNumber,
+        participant.roles as participantRoles,
+        participant.street as participantStreet,
+        participant.city as participantCity
+      FROM meal
+      LEFT JOIN user as cook ON meal.cookId = cook.id
+      LEFT JOIN meal_participants_user ON meal.id = meal_participants_user.mealId
+      LEFT JOIN user as participant ON meal_participants_user.userId = participant.id
+      WHERE meal.id = ?
+    `;
+
     dbconnection.getConnection(function (err, conn) {
       if (err) {
-        logger.error(err.code, err.syscall, err.address, err.port);
-        next('error: ' + err.message);
+        logger.error('Error', err);
+        next('Error: ' + err.message);
+        return;
       }
+
       if (conn) {
         conn.query(
           sqlStatement,
-          [mealId, userId],
+          [requestedMealId],
           function (err, results, fields) {
             if (err) {
               logger.error(err.message);
               next({
                 status: 409,
                 message: err.message,
+                data: {},
               });
               return;
             }
-            if (results && results.affectedRows === 1) {
-              logger.trace('Deleted meal', results);
+
+            if (results && results.length > 0) {
+              let meal = {
+                id: results[0].id,
+                name: results[0].name,
+                description: results[0].description,
+                isActive: results[0].isActive,
+                isVega: results[0].isVega,
+                isVegan: results[0].isVegan,
+                isToTakeHome: results[0].isToTakeHome,
+                dateTime: results[0].dateTime,
+                createDate: results[0].createDate,
+                updateDate: results[0].updateDate,
+                maxAmountOfParticipants: results[0].maxAmountOfParticipants,
+                price: results[0].price,
+                imageUrl: results[0].imageUrl,
+                allergenes: results[0].allergenes,
+                cook: {
+                  id: results[0].cookId,
+                  firstName: results[0].cookFirstName,
+                  lastName: results[0].cookLastName,
+                  isActive: results[0].cookIsActive,
+                  emailAdress: results[0].cookEmailAdress,
+                  phoneNumber: results[0].cookPhoneNumber,
+                  roles: results[0].cookRoles,
+                  street: results[0].cookStreet,
+                  city: results[0].cookCity,
+                },
+                participants: results[0].participantId
+                  ? [
+                      {
+                        id: results[0].participantId,
+                        firstName: results[0].participantFirstName,
+                        lastName: results[0].participantLastName,
+                        isActive: results[0].participantIsActive,
+                        emailAdress: results[0].participantEmailAdress,
+                        phoneNumber: results[0].participantPhoneNumber,
+                        roles: results[0].participantRoles,
+                        street: results[0].participantStreet,
+                        city: results[0].participantCity,
+                      },
+                    ]
+                  : [],
+              };
+
               res.status(200).json({
                 status: 200,
-                message: 'Meal deleted successfully',
-                data: {},
+                message: 'Meal found',
+                data: meal,
               });
             } else {
               next({
-                status: 401,
-                message: 'Not Authorized',
+                status: 404,
+                message: 'Meal not found',
                 data: {},
               });
             }
+
+            dbconnection.releaseConnection(conn);
           }
         );
-        dbconnection.releaseConnection(conn);
       }
     });
   },
-  // updateUser updates a user's information in the database based on their email and password
-  updateMeal: (req, res) => {},
-  // getUserById retrieves a user's public information and associated meals based on their user ID
-  getMealById: (req, res) => {
-    const { id } = req.params;
 
-    if (isNaN(id)) {
-      return res.status(400).json({
-        status: 400,
-        message: 'Invalid user ID',
-        data: {},
-      });
-    }
-
-    dbconnection.getConnection(function (err, connection) {
-      if (err) throw err;
-
-      const userSql =
-        'SELECT firstName, lastName, emailAdress, phoneNumber,roles,isActive FROM user WHERE id = ?';
-      const mealSql = 'SELECT * FROM meal WHERE CookID = ?';
-
-      connection.query(userSql, [id], function (error, userResults, fields) {
-        if (error) throw error;
-
-        if (userResults.length === 0) {
-          connection.release();
-          res.status(404).json({
-            status: 404,
-            message: 'User not found',
-            data: {},
-          });
-        } else {
-          connection.query(
-            mealSql,
-            [id],
-            function (error, mealResults, fields) {
-              connection.release();
-
-              if (error) throw error;
-
-              const meals = mealResults.map((result) => {
-                return {
-                  id: result.id,
-                  name: result.name,
-                  description: result.description,
-                  dateTime: result.dateTime,
-                  maxAmountOfParticipants: result.maxAmountOfParticipants,
-                  price: result.price,
-                  imageUrl: result.imageUrl,
-                  cookId: result.cookId,
-                  createDate: result.createDate,
-                  updateDate: result.updateDate,
-                  allergenes: result.allergenes,
-                  isVega: result.isVega,
-                  isVegan: result.isVegan,
-                  isToTakeHome: result.isToTakeHome,
-                };
-              });
-
-              const userData = { ...userResults[0], meals };
-
-              res.status(200).json({
-                status: 200,
-                message: 'User found',
-                data: userData,
-              });
-            }
-          );
-        }
-      });
-    });
-  },
   // getTableLength retrieves the length of a table from the database
   getTableLength: (tableName, callback) => {
     dbconnection.getConnection((err, connection) => {
