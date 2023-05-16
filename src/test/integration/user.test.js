@@ -3,7 +3,7 @@ const chai = require('chai');
 const chaiHttp = require('chai-http');
 const app = require('../../../index');
 const dbconnection = require('../../database/dbconnection');
-const { getTableLength } = require('../../controller/userController');
+const { getTableLength } = require('../../controller/user.controller');
 const logger = require('../utils/utils').logger;
 require('tracer').setLevel('debug');
 chai.should();

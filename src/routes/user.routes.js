@@ -1,6 +1,6 @@
 const express = require('express');
 const userRouter = express.Router();
-const userController = require('../controller/userController');
+const userController = require('../controller/user.controller');
 const authController = require('../controller/auth.controller');
 // UC-201: Register a new user
 userRouter.post('', userController.validateUser, userController.createUser);

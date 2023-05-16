@@ -46,7 +46,7 @@ app.get('/api/info', (req, res) => {
   });
 });
 
-// // Refer to routes defined in userRouter
+// Refer to routes defined in userRouter
 app.use('/api/user', userRouter);
 app.use('/api/meal', mealRouter);
 app.use('/api/auth', authRouter);

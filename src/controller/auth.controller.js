@@ -1,10 +1,9 @@
-const assert = require('assert');
 const jwt = require('jsonwebtoken');
 const dbconnection = require('../database/dbconnection');
 const { logger, jwtSecretKey } = require('../test/utils/utils');
 const fun = require('../controller/function');
 
-module.exports = {
+const authController = {
   login(req, res, next) {
     logger.trace('login called');
     // Log request method and body
@@ -153,3 +152,4 @@ module.exports = {
     }
   },
 };
+module.exports = authController;

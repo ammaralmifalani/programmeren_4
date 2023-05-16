@@ -1,4 +1,4 @@
-const fun = require('../controller/function');
+const fun = require('./function');
 const assert = require('assert');
 const dbconnection = require('../database/dbconnection');
 const logger = require('../test/utils/utils').logger;
