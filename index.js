@@ -10,6 +10,13 @@ const logger = require('./src/test/utils/utils').logger;
 // Parse JSON requests
 app.use(express.json());
 
+app.use((req, res, next) => {
+  console.log(
+    `${new Date().toISOString()} - ${req.method} Request: ${req.url}`
+  );
+  next();
+});
+
 // Catch all routes and log their method and URL
 app.use('*', (req, res, next) => {
   const method = req.method;

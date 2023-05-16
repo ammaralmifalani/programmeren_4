@@ -8,6 +8,7 @@ const { userInfo } = require('os');
 module.exports = {
   login(req, res, next) {
     logger.trace('login called');
+    logger.trace(req.body);
     // Check if required fields are provided
     const credentials = {
       emailAdress: req.body.emailAdress,
