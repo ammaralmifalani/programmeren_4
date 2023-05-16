@@ -10,7 +10,6 @@ const logger = require('./src/test/utils/utils').logger;
 // Parse JSON requests
 app.use(express.json());
 
-// Log request method and URL
 app.use((req, res, next) => {
   console.log(
     `${new Date().toISOString()} - ${req.method} Request: ${req.url}`
@@ -18,6 +17,13 @@ app.use((req, res, next) => {
   next();
 });
 
+// Catch all routes and log their method and URL
+app.use('*', (req, res, next) => {
+  const method = req.method;
+  const url = req.originalUrl;
+  logger.trace(`methode ${method} is aangeroepen for URL: ${url}`);
+  next();
+});
 // Define a route for server info
 app.get('/api/info', (req, res) => {
   res.status(200).json({
@@ -31,15 +37,15 @@ app.get('/api/info', (req, res) => {
   });
 });
 
-// Route: welcome message
-app.get('/', (req, res) => {
-  res.send('welcome to server API van de share a meal');
-});
-
 // Refer to routes defined in userRouter
 app.use('/api/user', userRouter);
 app.use('/api/meal', mealRouter);
 app.use('/api/auth', authRouter);
+
+// Route: welcome message
+app.get('/', (req, res) => {
+  res.send('welcome to server API van de share a meal');
+});
 
 // Catch all other routes that do not match any endpoints
 app.use('*', (req, res) => {
@@ -53,17 +59,16 @@ app.use('*', (req, res) => {
 
 // Express error handler
 app.use((error, req, res, next) => {
+  logger.error(error.status, error.message);
   res.status(error.status).json({
     status: error.status,
     message: error.message,
     data: {},
   });
 });
-
 // Start the server on the specified port
 app.listen(port, () => {
-  logger.info(`Server API van de share a meal listening on port ${port}`);
+  logger.info(` Server API van de share a meal listening on port ${port}`);
 });
-
 // Export the server for use in tests
 module.exports = app;

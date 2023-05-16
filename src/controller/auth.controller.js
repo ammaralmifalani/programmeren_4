@@ -54,8 +54,9 @@ module.exports = {
               .status(401)
               .json({ status: 401, message: 'Invalid password', data: {} });
           } else {
-            const { password, id, ...userInfo } = results[0];
-            const payload = { userId: id };
+            logger.debug('USER ID:', results[0].id);
+            const { password, ...userInfo } = results[0];
+            const payload = { userId: results[0].id };
             jwt.sign(
               payload,
               jwtSecretKey,
