@@ -4,11 +4,13 @@ const dbconnection = require('../database/dbconnection');
 const { logger, jwtSecretKey } = require('../test/utils/utils');
 const fun = require('../controller/function');
 
-
 module.exports = {
   login(req, res, next) {
     logger.trace('login called');
-    logger.trace(req.body);
+    // Log request method and body
+    logger.debug(`Request Method: ${req.method}`);
+    logger.debug(`Request Body: ${JSON.stringify(req.body)}`);
+
     // Check if required fields are provided
     const credentials = {
       emailAdress: req.body.emailAdress,
@@ -86,6 +88,10 @@ module.exports = {
    * valideert of de vereiste body aanwezig is.
    */
   validateLogin(req, res, next) {
+    // Log request method and body
+    logger.debug(`Request Method: ${req.method}`);
+    logger.debug(`Request Body: ${JSON.stringify(req.body)}`);
+
     // Check if emailAdress exists, is a string, is not an empty string, and passes email validation
     if (
       !req.body.emailAdress ||

@@ -14,6 +14,10 @@ app.use((req, res, next) => {
   console.log(
     `${new Date().toISOString()} - ${req.method} Request: ${req.url}`
   );
+
+  logger.debug(`Request Method: ${req.method}`);
+  logger.debug(`Request URL: ${req.url}`);
+
   next();
 });
 
@@ -24,6 +28,11 @@ app.use('*', (req, res, next) => {
   logger.trace(`methode ${method} is aangeroepen for URL: ${url}`);
   next();
 });
+// Route: welcome message
+app.get('/', (req, res) => {
+  res.send('welcome to server API van de share a meal');
+});
+
 // Define a route for server info
 app.get('/api/info', (req, res) => {
   res.status(200).json({
@@ -42,12 +51,15 @@ app.get('/api/info', (req, res) => {
 // app.use('/api/meal', mealRouter);
 app.use('/api/auth', authRouter);
 
+<<<<<<< HEAD
 
 // // Route: welcome message
 // app.get('/', (req, res) => {
 //   res.send('welcome to server API van de share a meal');
 // });
 
+=======
+>>>>>>> develop_branch
 // Catch all other routes that do not match any endpoints
 app.use('*', (req, res) => {
   logger.warn('Invalid endpoint called: ', req.path);
