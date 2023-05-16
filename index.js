@@ -10,12 +10,18 @@ const logger = require('./src/test/utils/utils').logger;
 // Parse JSON requests
 app.use(express.json());
 
+// Log request method and URL
 app.use((req, res, next) => {
   console.log(
     `${new Date().toISOString()} - ${req.method} Request: ${req.url}`
   );
   next();
 });
+
+// Refer to routes defined in userRouter
+app.use('/api/user', userRouter);
+app.use('/api/meal', mealRouter);
+app.use('/api/auth', authRouter);
 
 // Catch all routes and log their method and URL
 app.use('*', (req, res, next) => {
@@ -24,6 +30,7 @@ app.use('*', (req, res, next) => {
   logger.trace(`methode ${method} is aangeroepen for URL: ${url}`);
   next();
 });
+
 // Define a route for server info
 app.get('/api/info', (req, res) => {
   res.status(200).json({
@@ -36,11 +43,6 @@ app.get('/api/info', (req, res) => {
     },
   });
 });
-
-// Refer to routes defined in userRouter
-app.use('/api/user', userRouter);
-app.use('/api/meal', mealRouter);
-app.use('/api/auth', authRouter);
 
 // Route: welcome message
 app.get('/', (req, res) => {
