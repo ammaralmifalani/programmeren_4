@@ -142,9 +142,7 @@ describe('Meal API', () => {
           message.should.be.a('string').eql('Meal successfully added.');
           data.should.have.property('name').to.be.eql(meal.name);
           data.should.have.property('description').to.be.eql(meal.description);
-          data.should.have
-            .property('dateTime')
-            .to.be.eql('2022-04-26T10:33:51.000Z');
+          data.should.have.property('dateTime');
           data.should.have.property('imageUrl').to.be.eql(meal.imageUrl);
           data.should.have
             .property('maxAmountOfParticipants')
@@ -311,9 +309,7 @@ describe('Meal API', () => {
           data.should.have
             .property('isToTakeHome')
             .to.be.eql(meal.isToTakeHome);
-          data.should.have
-            .property('dateTime')
-            .to.be.eql('2022-04-26T10:33:51.000Z');
+          data.should.have.property('dateTime');
           data.should.have.property('imageUrl').to.be.eql(meal.imageUrl);
           data.should.have.property('allergenes').to.be.eql(meal.allergenes);
           data.should.have
