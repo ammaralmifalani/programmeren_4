@@ -33,7 +33,7 @@ app.get('/api/info', (req, res) => {
 // Refer to routes defined in userRouter
 app.use('/api/user', userRouter);
 app.use('/api/meal', mealRouter);
-app.use('/api', authRouter);
+app.use('/api/auth', authRouter);
 
 // Route: welcome message
 app.get('/', (req, res) => {
