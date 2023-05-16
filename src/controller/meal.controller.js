@@ -1,4 +1,3 @@
-const fun = require('../controller/function');
 const dbconnection = require('../database/dbconnection');
 const logger = require('../test/utils/utils').logger;
 
@@ -239,10 +238,11 @@ const mealController = {
                   if (err) {
                     // Handle the error here
                   }
+                  connection.release();
                   if (result && result.length > 0) {
-                    res.status(200).json({
-                      status: 200,
-                      message: 'New Meal added successfully',
+                    res.status(201).json({
+                      status: 201,
+                      message: 'Meal successfully added.',
                       data: result[0],
                     });
                   }
@@ -321,9 +321,102 @@ const mealController = {
       );
     });
   },
+  // updateMeal updates a meal's information in the database
+  updateMeal: (req, res, next) => {
+    let mealId = req.params.mealId;
+    let userId = req.userId;
+    logger.debug('USER ID:', userId);
+    logger.debug('MEAL ID:', mealId);
+    let {
+      name,
+      description,
+      isActive,
+      isVega,
+      isVegan,
+      isToTakeHome,
+      dateTime,
+      maxAmountOfParticipants,
+      price,
+      imageUrl,
+      allergenes,
+    } = req.body;
 
-  // updateUser updates a user's information in the database
-  updateMeal: (req, res, next) => {},
+    // allergenes = "gluten",   "noten", "lactose";
+
+    dbconnection.getConnection(function (err, connection) {
+      if (err) throw err;
+
+      // Use the connection
+      connection.query(
+        'SELECT * FROM meal WHERE id = ?',
+        [mealId],
+        function (error, results, fields) {
+          if (error) throw error;
+
+          // Check if meal exists
+          if (results.length === 0) {
+            return res.status(404).json({
+              status: 404,
+              message: 'Meal not found',
+              data: {},
+            });
+          }
+
+          // Check if user is updating their own meal
+          if (results[0].cookId != userId) {
+            return res.status(403).json({
+              status: 403,
+              message: 'You can only update your own meals',
+              data: {},
+            });
+          }
+
+          const sql = `
+          UPDATE meal 
+          SET name = ?, description = ?, isActive = ?, isVega = ?, isVegan = ?, isToTakeHome = ?, dateTime = ?, maxAmountOfParticipants = ?, price = ?, imageUrl = ?, allergenes = ?
+          WHERE id = ?
+        `;
+
+          const values = [
+            name,
+            description,
+            isActive,
+            isVega,
+            isVegan,
+            isToTakeHome,
+            dateTime,
+            maxAmountOfParticipants,
+            price,
+            imageUrl,
+            allergenes,
+            mealId,
+          ];
+          logger.debug('Updating meal with allergenes:', allergenes);
+          connection.query(sql, values, function (error, results, fields) {
+            if (error) throw error;
+
+            // Get the updated meal details
+            connection.query(
+              'SELECT * FROM meal WHERE id = ?',
+              [mealId],
+              function (error, results, fields) {
+                if (error) throw error;
+
+                // Meal was updated successfully
+                res.status(200).json({
+                  status: 200,
+                  message: `Meal successfully updated`,
+                  data: results[0],
+                });
+
+                connection.release();
+              }
+            );
+          });
+        }
+      );
+    });
+  },
   // getMealById
   getMealById: (req, res, next) => {
     const requestedMealId = req.params.mealId;
@@ -440,29 +533,6 @@ const mealController = {
           }
         );
       }
-    });
-  },
-
-  // getTableLength retrieves the length of a table from the database
-  getTableLength: (tableName, callback) => {
-    dbconnection.getConnection((err, connection) => {
-      if (err) throw err; // not connected!
-
-      // Use the connection
-      connection.query(
-        `SELECT COUNT(*) as count FROM ${tableName}`,
-        (error, results, fields) => {
-          // When done with the connection, release it.
-          connection.release();
-          // Handle error after the release.
-          if (error) throw error;
-
-          // Don't use the connection here, it has been returned to the pool.
-          const tableLength = results[0].count;
-
-          callback(null, tableLength);
-        }
-      );
     });
   },
 };

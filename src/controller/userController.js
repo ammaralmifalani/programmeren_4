@@ -440,6 +440,7 @@ const userController = {
   // updateUser updates a user's information in the database
   updateUser: (req, res, next) => {
     let id = req.params.id;
+    let userId = req.userId;
     let {
       firstName,
       lastName,
@@ -470,7 +471,7 @@ const userController = {
           }
 
           // Check if user is updating their own profile
-          if (id != req.userId) {
+          if (id != userId) {
             return res.status(403).json({
               status: 403,
               message: 'You can only update your own profile',

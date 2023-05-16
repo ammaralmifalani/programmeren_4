@@ -596,7 +596,6 @@ describe('User API', () => {
 
     it('TC-205-6 | User successfully updated', (done) => {
       let user = {
-        id: 1,
         firstName: 'John',
         lastName: 'Doe',
         street: 'Lovensdijkstraat 61',
