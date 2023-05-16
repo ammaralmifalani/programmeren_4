@@ -3,7 +3,7 @@ const jwt = require('jsonwebtoken');
 const dbconnection = require('../database/dbconnection');
 const { logger, jwtSecretKey } = require('../test/utils/utils');
 const fun = require('../controller/function');
-const { userInfo } = require('os');
+
 
 module.exports = {
   login(req, res, next) {
