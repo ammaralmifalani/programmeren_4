@@ -47,19 +47,15 @@ app.get('/api/info', (req, res) => {
 });
 
 // // Refer to routes defined in userRouter
-// app.use('/api/user', userRouter);
-// app.use('/api/meal', mealRouter);
+app.use('/api/user', userRouter);
+app.use('/api/meal', mealRouter);
 app.use('/api/auth', authRouter);
-
-<<<<<<< HEAD
 
 // // Route: welcome message
 // app.get('/', (req, res) => {
 //   res.send('welcome to server API van de share a meal');
 // });
 
-=======
->>>>>>> develop_branch
 // Catch all other routes that do not match any endpoints
 app.use('*', (req, res) => {
   logger.warn('Invalid endpoint called: ', req.path);
