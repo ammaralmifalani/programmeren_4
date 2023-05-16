@@ -16,7 +16,7 @@ app.use((req, res, next) => {
   );
   next();
 });
-app.use('/api/auth', authRouter);
+
 // Catch all routes and log their method and URL
 app.use('*', (req, res, next) => {
   const method = req.method;
@@ -40,6 +40,7 @@ app.get('/api/info', (req, res) => {
 // // Refer to routes defined in userRouter
 // app.use('/api/user', userRouter);
 // app.use('/api/meal', mealRouter);
+app.use('/api/auth', authRouter);
 
 
 // // Route: welcome message
