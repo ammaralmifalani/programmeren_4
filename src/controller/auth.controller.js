@@ -57,6 +57,7 @@ module.exports = {
               .json({ status: 401, message: 'Invalid password', data: {} });
           } else {
             logger.debug('USER ID:', results[0].id);
+            logger.debug('Password matches, generating JWT...');
             const { password, ...userInfo } = results[0];
             const payload = { userId: results[0].id };
             jwt.sign(
@@ -65,8 +66,10 @@ module.exports = {
               { expiresIn: '2d' },
               (err, token) => {
                 if (err) {
+                  logger.error('Error signing JWT:', err);
                 }
                 if (token) {
+                  logger.info('JWT generated:', token);
                   res.status(200).json({
                     status: 200,
                     message: 'Authentication successful!',
