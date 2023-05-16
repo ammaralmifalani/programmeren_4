@@ -24,11 +24,13 @@ app.use('/api/meal', mealRouter);
 app.use('/api/auth', authRouter);
 
 // Catch all routes and log their method and URL
-app.use('*', (req, res, next) => {
-  const method = req.method;
-  const url = req.originalUrl;
-  logger.trace(`methode ${method} is aangeroepen for URL: ${url}`);
-  next();
+app.use('*', (req, res) => {
+  logger.warn('Invalid endpoint called: ', req.path);
+  res.status(404).json({
+    status: 404,
+    message: 'Endpoint not found',
+    data: {},
+  });
 });
 
 // Define a route for server info
