@@ -57,97 +57,154 @@ const userController = {
     let user = req.body;
     logger.info('Validating user');
 
-    // Check if firstName exists, is a string, and is not an empty string
-    if (
-      !user.firstName ||
-      typeof user.firstName !== 'string' ||
-      user.firstName.trim() === ''
-    ) {
-      return res.status(400).json({
-        status: 400,
-        message: 'Invalid first name.',
-        data: {},
-      });
+    const requiredFields = [
+      'firstName',
+      'lastName',
+      'password',
+      'street',
+      'city',
+      'emailAdress',
+    ];
+    const fieldTypes = {
+      firstName: 'string',
+      lastName: 'string',
+      password: 'string',
+      street: 'string',
+      city: 'string',
+      emailAdress: 'string',
+    };
+
+    for (let field of requiredFields) {
+      if (!user[field]) {
+        return next({ status: 400, message: `${field} is missing.`, data: {} });
+      }
+      if (typeof user[field] !== fieldTypes[field]) {
+        return next({
+          status: 400,
+          message: `${field} must be a ${fieldTypes[field]}.`,
+          data: {},
+        });
+      }
+      if (typeof user[field] === 'string' && user[field].trim() === '') {
+        return next({
+          status: 400,
+          message: `${field} must not be blank.`,
+          data: {},
+        });
+      }
+      if (field === 'password' && !fun.validatePassword(user[field])) {
+        return next({ status: 400, message: 'Invalid password.', data: {} });
+      }
+      if (field === 'emailAdress' && !fun.validateEmail(user[field])) {
+        return next({
+          status: 400,
+          message: 'Invalid email address.',
+          data: {},
+        });
+      }
     }
 
-    // Check if lastName exists, is a string, and is not an empty string
-    if (
-      !user.lastName ||
-      typeof user.lastName !== 'string' ||
-      user.lastName.trim() === ''
-    ) {
-      return res.status(400).json({
-        status: 400,
-        message: 'Invalid last name.',
-        data: {},
-      });
-    }
-
-    // Check if password exists, is a string, is not an empty string, and passes password validation
-    if (
-      !user.password ||
-      typeof user.password !== 'string' ||
-      user.password.trim() === '' ||
-      !fun.validatePassword(user.password)
-    ) {
-      return res.status(400).json({
-        status: 400,
-        message: 'Invalid password.',
-        data: {},
-      });
-    }
-
-    // Check if street exists, is a string, and is not an empty string
-    if (
-      !user.street ||
-      typeof user.street !== 'string' ||
-      user.street.trim() === ''
-    ) {
-      return res.status(400).json({
-        status: 400,
-        message: 'Invalid street.',
-        data: {},
-      });
-    }
-
-    // Check if city exists, is a string, and is not an empty string
-    if (
-      !user.city ||
-      typeof user.city !== 'string' ||
-      user.city.trim() === ''
-    ) {
-      return res.status(400).json({
-        status: 400,
-        message: 'Invalid city.',
-        data: {},
-      });
-    }
-
-    // Check if emailAdress exists, is a string, is not an empty string, and passes email validation
-    if (
-      !user.emailAdress ||
-      typeof user.emailAdress !== 'string' ||
-      user.emailAdress.trim() === '' ||
-      !fun.validateEmail(user.emailAdress)
-    ) {
-      return res.status(400).json({
-        status: 400,
-        message: 'Invalid email address.',
-        data: {},
-      });
-    }
-    //Check if phoneNumber exists, is a string, is not an empty string, and passes phone number validation
     if (!fun.validatePhoneNumber(user.phoneNumber)) {
-      return res.status(400).json({
-        status: 400,
-        message: 'Invalid phone number.',
-        data: {},
-      });
+      return next({ status: 400, message: 'Invalid phone number.', data: {} });
     }
 
-    // If all checks pass, proceed to the next middleware function
     next();
   },
+  // validateUser: (req, res, next) => {
+  //   let user = req.body;
+  //   logger.info('Validating user');
+
+  //   // Check if firstName exists, is a string, and is not an empty string
+  //   if (
+  //     !user.firstName ||
+  //     typeof user.firstName !== 'string' ||
+  //     user.firstName.trim() === ''
+  //   ) {
+  //     return res.status(400).json({
+  //       status: 400,
+  //       message: 'Invalid first name.',
+  //       data: {},
+  //     });
+  //   }
+
+  //   // Check if lastName exists, is a string, and is not an empty string
+  //   if (
+  //     !user.lastName ||
+  //     typeof user.lastName !== 'string' ||
+  //     user.lastName.trim() === ''
+  //   ) {
+  //     return res.status(400).json({
+  //       status: 400,
+  //       message: 'Invalid last name.',
+  //       data: {},
+  //     });
+  //   }
+
+  //   // Check if password exists, is a string, is not an empty string, and passes password validation
+  //   if (
+  //     !user.password ||
+  //     typeof user.password !== 'string' ||
+  //     user.password.trim() === '' ||
+  //     !fun.validatePassword(user.password)
+  //   ) {
+  //     return res.status(400).json({
+  //       status: 400,
+  //       message: 'Invalid password.',
+  //       data: {},
+  //     });
+  //   }
+
+  //   // Check if street exists, is a string, and is not an empty string
+  //   if (
+  //     !user.street ||
+  //     typeof user.street !== 'string' ||
+  //     user.street.trim() === ''
+  //   ) {
+  //     return res.status(400).json({
+  //       status: 400,
+  //       message: 'Invalid street.',
+  //       data: {},
+  //     });
+  //   }
+
+  //   // Check if city exists, is a string, and is not an empty string
+  //   if (
+  //     !user.city ||
+  //     typeof user.city !== 'string' ||
+  //     user.city.trim() === ''
+  //   ) {
+  //     return res.status(400).json({
+  //       status: 400,
+  //       message: 'Invalid city.',
+  //       data: {},
+  //     });
+  //   }
+
+  //   // Check if emailAdress exists, is a string, is not an empty string, and passes email validation
+  //   if (
+  //     !user.emailAdress ||
+  //     typeof user.emailAdress !== 'string' ||
+  //     user.emailAdress.trim() === '' ||
+  //     !fun.validateEmail(user.emailAdress)
+  //   ) {
+  //     return res.status(400).json({
+  //       status: 400,
+  //       message: 'Invalid email address.',
+  //       data: {},
+  //     });
+  //   }
+  //   //Check if phoneNumber exists, is a string, is not an empty string, and passes phone number validation
+  //   if (!fun.validatePhoneNumber(user.phoneNumber)) {
+  //     return res.status(400).json({
+  //       status: 400,
+  //       message: 'Invalid phone number.',
+  //       data: {},
+  //     });
+  //   }
+
+  //   // If all checks pass, proceed to the next middleware function
+  //   next();
+  // },
   // CreateUser creates a new user and adds it to the database
   createUser: (req, res) => {
     logger.trace('Create User');
