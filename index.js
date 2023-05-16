@@ -10,6 +10,15 @@ const logger = require('./src/test/utils/utils').logger;
 // Parse JSON requests
 app.use(express.json());
 
+app.use((req, res, next) => {
+  console.log(
+    `${new Date().toISOString()} - ${req.method} Request: ${req.url}`
+  );
+  logger.debug(`Request Method: ${req.method}`);
+  logger.debug(`Request URL: ${req.url}`);
+  next();
+});
+
 // Catch all routes and log their method and URL
 app.use('*', (req, res, next) => {
   const method = req.method;
@@ -17,6 +26,11 @@ app.use('*', (req, res, next) => {
   logger.trace(`methode ${method} is aangeroepen for URL: ${url}`);
   next();
 });
+// Route: welcome message
+app.get('/', (req, res) => {
+  res.send('welcome to server API van de share a meal');
+});
+
 // Define a route for server info
 app.get('/api/info', (req, res) => {
   res.status(200).json({
@@ -34,11 +48,6 @@ app.get('/api/info', (req, res) => {
 app.use('/api/user', userRouter);
 app.use('/api/meal', mealRouter);
 app.use('/api/auth', authRouter);
-
-// Route: welcome message
-app.get('/', (req, res) => {
-  res.send('welcome to server API van de share a meal');
-});
 
 // Catch all other routes that do not match any endpoints
 app.use('*', (req, res) => {

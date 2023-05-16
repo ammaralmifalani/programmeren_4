@@ -71,7 +71,7 @@ describe('User API', () => {
     it('TC-101-1 | Required field is missing', (done) => {
       chai
         .request(app)
-        .post('/api/login')
+        .post('/api/auth/login')
         .send({
           // Emailaddress is missing
           password: password_test,
@@ -89,7 +89,7 @@ describe('User API', () => {
     it('TC-101-2 | Invalid e-mail address', (done) => {
       chai
         .request(app)
-        .post('/api/login')
+        .post('/api/auth/login')
         .send({
           emailAdress: 'john@gmail',
           password: 'Secret123',
@@ -111,7 +111,7 @@ describe('User API', () => {
       };
       chai
         .request(app)
-        .post('/api/login')
+        .post('/api/auth/login')
         .send(user)
         .end((err, res) => {
           res.body.should.be.an('object');
@@ -130,7 +130,7 @@ describe('User API', () => {
       };
       chai
         .request(app)
-        .post('/api/login')
+        .post('/api/auth/login')
         .send(user)
         .end((err, res) => {
           res.body.should.be.an('object');
@@ -145,7 +145,7 @@ describe('User API', () => {
     it('TC-101-5 | User successfully logged in', (done) => {
       chai
         .request(app)
-        .post('/api/login')
+        .post('/api/auth/login')
         .send({
           emailAdress: 'j.doe@gmail.com',
           password: 'Secret123',
