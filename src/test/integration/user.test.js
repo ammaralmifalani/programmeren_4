@@ -141,34 +141,37 @@ describe('User API', () => {
           done();
         });
     });
-
-    it('TC-101-5 | User successfully logged in', (done) => {
+    
+    it('TC-205-6 | User successfully updated', (done) => {
+      let user = {
+        id: 1,
+        firstName: 'John',
+        lastName: 'Doe',
+        street: 'Lovensdijkstraat 61',
+        city: 'Breda',
+        emailAdress: 'j.doe@server.com',
+        password: 'Secret123',
+        phoneNumber: '0612425475',
+      };
       chai
         .request(app)
-        .post('/api/auth/login')
-        .send({
-          emailAdress: 'j.doe@gmail.com',
-          password: 'Secret123',
-        })
+        .put('/api/user/1')
+        .set('Authorization', `Bearer ${token}`)
+        .send(user)
         .end((err, res) => {
           res.body.should.be.an('object');
           let { status, message, data } = res.body;
-          status.should.be.equal(200);
-          message.should.be.equal('Authentication successful!');
-          data.should.be.an('object');
-          data.should.have.property('userInfo');
-          let { userInfo } = data;
-          userInfo.should.be.an('object');
-          userInfo.should.have.property('firstName');
-          userInfo.should.have.property('lastName');
-          userInfo.should.have.property('isActive');
-          userInfo.should.have.property('emailAdress');
-          userInfo.should.have.property('phoneNumber');
-          userInfo.should.have.property('roles');
-          userInfo.should.have.property('street');
-          userInfo.should.have.property('city');
-          data.should.have.property('token');
-          token = data.token;
+          status.should.eql(200);
+          message.should.be.a('string').eql('User successfully updated');
+          data.should.have.property('id');
+          data.should.have.property('firstName');
+          data.should.have.property('lastName');
+          data.should.have.property('isActive');
+          data.should.have.property('emailAdress');
+          data.should.have.property('phoneNumber');
+          data.should.have.property('roles');
+          data.should.have.property('street');
+          data.should.have.property('city');
           done();
         });
     });
