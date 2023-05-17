@@ -147,7 +147,7 @@ describe('Meal API', () => {
           data.should.have
             .property('maxAmountOfParticipants')
             .to.be.eql(meal.maxAmountOfParticipants);
-          data.should.have.property('price').to.be.eql('12.75');
+          data.should.have.property('price').to.equal(meal.price);
           done();
         });
     });
@@ -315,7 +315,7 @@ describe('Meal API', () => {
           data.should.have
             .property('maxAmountOfParticipants')
             .to.be.eql(meal.maxAmountOfParticipants);
-          data.should.have.property('price').to.be.eql('12.75');
+          data.should.have.property('price').to.equal(meal.price);
           done();
         });
     });
@@ -377,7 +377,7 @@ describe('Meal API', () => {
           data.should.have
             .property('maxAmountOfParticipants')
             .to.be.eql(mealTest.maxAmountOfParticipants);
-          data.should.have.property('price').to.be.eql('6.50');
+          data.should.have.property('price').to.equal(mealTest.price);
           done();
         });
     });
@@ -438,7 +438,7 @@ describe('Meal API', () => {
           let { status, message, data } = res.body;
           status.should.eql(200);
           res.body.should.be.an('object');
-          message.should.be.a('string').eql('Meal successfully deleted');
+          message.should.be.a('string').eql('Maaltijd met ID 1 is verwijderd');
           res.body.should.have.property('data').to.be.empty;
           done();
         });

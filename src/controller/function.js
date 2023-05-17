@@ -54,6 +54,7 @@ function convertMealProperties(meal) {
     isVega: meal.isVega === 1,
     isVegan: meal.isVegan === 1,
     isToTakeHome: meal.isToTakeHome === 1,
+    price: parseFloat(meal.price),
   };
 }
 

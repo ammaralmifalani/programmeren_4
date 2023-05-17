@@ -342,7 +342,7 @@ const mealController = {
                 if (results.affectedRows > 0) {
                   res.status(200).json({
                     status: 200,
-                    message: 'Meal successfully deleted',
+                    message: `Maaltijd met ID ${mealId} is verwijderd`,
                     data: {},
                   });
                 }

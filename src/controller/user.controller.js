@@ -10,7 +10,8 @@ const userController = {
     logger.trace('Get all users');
 
     const queryField = Object.entries(req.query);
-    let sqlStatement = 'SELECT * FROM `user`';
+    let sqlStatement =
+      'SELECT id,firstName, lastName, emailAdress, phoneNumber, city, street,isActive,roles FROM `user`';
     let params = [];
 
     if (queryField.length === 2) {
@@ -600,7 +601,7 @@ const userController = {
                   status: 200,
                   message: 'User found',
                   data: {
-                    user: fun.convertIsActiveToBoolean(userResults[0]),
+                    ...fun.convertIsActiveToBoolean(userResults[0]),
                     meals: mealResults,
                   },
                 });
