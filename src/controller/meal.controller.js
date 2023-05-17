@@ -195,7 +195,16 @@ const mealController = {
     const meal = req.body;
     const userId = req.userId;
     logger.debug('meal: ' + JSON.stringify(meal));
-
+function isMySQLDateTimeFormat(dateTime) {
+  const mysqlDateTimeFormat = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(\.\d{6})?$/;
+  return mysqlDateTimeFormat.test(dateTime);
+}
+    logger.debug('Meal.dateTime',meal.dateTime);
+if (!isMySQLDateTimeFormat(meal.dateTime)) {
+  let date = new Date(meal.dateTime);
+  meal.dateTime = date.toISOString().slice(0, 19).replace('T', ' ');
+}
+  logger.debug('Meal.dateTime',meal.dateTime);
     let sqlInsertStatement =
       'INSERT INTO `meal` ( `name`, `description`, `imageUrl`, `dateTime`, `maxAmountOfParticipants`, `price`, `cookId`) VALUES' +
       '(?,?,?,?,?,?,?)';
