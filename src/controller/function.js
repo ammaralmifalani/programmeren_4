@@ -33,6 +33,30 @@ function validatePhoneNumber(phoneNumber) {
   const regex = /^06[-\s]?\d{8}$/;
   return regex.test(phoneNumber);
 }
+function convertIsActiveToBoolean(user) {
+  if (!user) {
+    return user;
+  }
+
+  return {
+    ...user,
+    isActive: user.isActive === 1,
+  };
+}
+
+function convertMealProperties(meal) {
+  if (!meal) {
+    return meal;
+  }
+  return {
+    ...meal,
+    isActive: meal.isActive === 1,
+    isVega: meal.isVega === 1,
+    isVegan: meal.isVegan === 1,
+    isToTakeHome: meal.isToTakeHome === 1,
+  };
+}
+
 function getRandomEmail() {
   const randomString = Math.random().toString(36).substring(2, 7); // Genereert een willekeurige tekenreeks van 5 karakters
   return `john.doe${randomString}@example.com`;
@@ -43,4 +67,6 @@ module.exports = {
   validatePassword: validatePassword,
   validatePhoneNumber: validatePhoneNumber,
   getRandomEmail: getRandomEmail,
+  convertIsActiveToBoolean: convertIsActiveToBoolean,
+  convertMealProperties: convertMealProperties,
 };

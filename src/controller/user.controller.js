@@ -42,6 +42,9 @@ const userController = {
           }
           if (results) {
             logger.info('Found', results.length, 'results');
+            for (let i = 0; i < results.length; i++) {
+              results[i] = fun.convertIsActiveToBoolean(results[i]);
+            }
             res.status(200).json({
               status: 200,
               message: 'Get All Users.',
@@ -271,7 +274,7 @@ const userController = {
               res.status(201).json({
                 status: 201,
                 message: 'User successfully registered.',
-                data: fetchResults[0], // assuming the query returns an array
+                data: fun.convertIsActiveToBoolean(fetchResults[0]), // assuming the query returns an array
               });
             }
           );
@@ -447,6 +450,7 @@ const userController = {
       emailAdress,
       password,
       phoneNumber,
+      isActive,
       street,
       city,
     } = req.body;
@@ -481,12 +485,13 @@ const userController = {
 
           const sql = `
           UPDATE user 
-          SET firstName = ?, lastName = ?, emailAdress = ?, password = ?, phoneNumber = ?, street = ?, city = ?
+          SET firstName = ?, lastName = ?, isActive = ?, emailAdress = ?, password = ?, phoneNumber = ?, street = ?, city = ?
           WHERE id = ?
-        `;
+          `;
           const values = [
             firstName,
             lastName,
+            isActive,
             emailAdress,
             password,
             phoneNumber,
@@ -509,7 +514,7 @@ const userController = {
                 res.status(200).json({
                   status: 200,
                   message: `User successfully updated`,
-                  data: results[0],
+                  data: fun.convertIsActiveToBoolean(results[0]),
                 });
 
                 connection.release();
@@ -541,7 +546,7 @@ const userController = {
               res.status(200).json({
                 status: 200,
                 message: 'User profile retrieved successfully',
-                data: results[0],
+                data: fun.convertIsActiveToBoolean(results[0]),
               });
             } else {
               const err = {
@@ -588,12 +593,14 @@ const userController = {
               [requestedUserId],
               function (mealError, mealResults, mealFields) {
                 if (mealError) throw mealError;
-
+                for (let i = 0; i < mealResults.length; i++) {
+                  mealResults[i] = fun.convertMealProperties(mealResults[i]);
+                }
                 res.status(200).json({
                   status: 200,
                   message: 'User found',
                   data: {
-                    user: userResults[0],
+                    user: fun.convertIsActiveToBoolean(userResults[0]),
                     meals: mealResults,
                   },
                 });

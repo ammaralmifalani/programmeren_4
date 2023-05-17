@@ -1,5 +1,6 @@
 const dbconnection = require('../database/dbconnection');
 const logger = require('../test/utils/utils').logger;
+const fun = require('./function');
 
 // userController handles the routes for creating, updating, deleting, and retrieving user data
 const mealController = {
@@ -98,7 +99,7 @@ const mealController = {
             logger.info('Found', results.length, 'results');
             let meals = [];
             results.forEach((result) => {
-              let meal = {
+              let meal = fun.convertMealProperties({
                 id: result.id,
                 name: result.name,
                 description: result.description,
@@ -113,7 +114,7 @@ const mealController = {
                 price: result.price,
                 imageUrl: result.imageUrl,
                 allergenes: result.allergenes,
-                cook: {
+                cook: fun.convertIsActiveToBoolean({
                   id: result.cookId,
                   firstName: result.cookFirstName,
                   lastName: result.cookLastName,
@@ -123,10 +124,10 @@ const mealController = {
                   roles: result.cookRoles,
                   street: result.cookStreet,
                   city: result.cookCity,
-                },
+                }),
                 participants: result.participantId
                   ? [
-                      {
+                      fun.convertIsActiveToBoolean({
                         id: result.participantId,
                         firstName: result.participantFirstName,
                         lastName: result.participantLastName,
@@ -136,10 +137,10 @@ const mealController = {
                         roles: result.participantRoles,
                         street: result.participantStreet,
                         city: result.participantCity,
-                      },
+                      }),
                     ]
                   : [],
-              };
+              });
               meals.push(meal);
             });
 
@@ -277,7 +278,7 @@ const mealController = {
                       res.status(201).json({
                         status: 201,
                         message: 'Meal successfully added.',
-                        data: result[0],
+                        data: fun.convertMealProperties(result[0]),
                       });
                     }
                   }
@@ -468,7 +469,7 @@ const mealController = {
                 res.status(200).json({
                   status: 200,
                   message: `Meal successfully updated`,
-                  data: results[0],
+                  data: fun.convertMealProperties(results[0]),
                 });
 
                 connection.release();
@@ -537,7 +538,7 @@ const mealController = {
             }
 
             if (results && results.length > 0) {
-              let meal = {
+              let meal = fun.convertMealProperties({
                 id: results[0].id,
                 name: results[0].name,
                 description: results[0].description,
@@ -552,7 +553,7 @@ const mealController = {
                 price: results[0].price,
                 imageUrl: results[0].imageUrl,
                 allergenes: results[0].allergenes,
-                cook: {
+                cook: fun.convertIsActiveToBoolean({
                   id: results[0].cookId,
                   firstName: results[0].cookFirstName,
                   lastName: results[0].cookLastName,
@@ -562,10 +563,10 @@ const mealController = {
                   roles: results[0].cookRoles,
                   street: results[0].cookStreet,
                   city: results[0].cookCity,
-                },
+                }),
                 participants: results[0].participantId
                   ? [
-                      {
+                      fun.convertIsActiveToBoolean({
                         id: results[0].participantId,
                         firstName: results[0].participantFirstName,
                         lastName: results[0].participantLastName,
@@ -575,10 +576,10 @@ const mealController = {
                         roles: results[0].participantRoles,
                         street: results[0].participantStreet,
                         city: results[0].participantCity,
-                      },
+                      }),
                     ]
                   : [],
-              };
+              });
 
               res.status(200).json({
                 status: 200,
