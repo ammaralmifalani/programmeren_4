@@ -141,29 +141,21 @@ describe('User API', () => {
           done();
         });
     });
-    
-    it('TC-205-6 | User successfully updated', (done) => {
-      let user = {
-        id: 1,
-        firstName: 'John',
-        lastName: 'Doe',
-        street: 'Lovensdijkstraat 61',
-        city: 'Breda',
-        emailAdress: 'j.doe@server.com',
-        password: 'Secret123',
-        phoneNumber: '0612425475',
-      };
+
+    it('TC-101-5 | User successfully logged in', (done) => {
       chai
         .request(app)
-        .put('/api/user/1')
-        .set('Authorization', `Bearer ${token}`)
-        .send(user)
+        .post('/api/auth/login')
+        .send({
+          emailAdress: 'j.doe@gmail.com',
+          password: 'Secret123',
+        })
         .end((err, res) => {
           res.body.should.be.an('object');
           let { status, message, data } = res.body;
-          status.should.eql(200);
-          message.should.be.a('string').eql('User successfully updated');
-          data.should.have.property('id');
+          status.should.be.equal(200);
+          message.should.be.equal('Authentication successful!');
+          data.should.be.an('object');
           data.should.have.property('firstName');
           data.should.have.property('lastName');
           data.should.have.property('isActive');
@@ -172,6 +164,8 @@ describe('User API', () => {
           data.should.have.property('roles');
           data.should.have.property('street');
           data.should.have.property('city');
+          data.should.have.property('token');
+          token = data.token;
           done();
         });
     });
@@ -695,3 +689,4 @@ describe('User API', () => {
     });
   });
 });
+
