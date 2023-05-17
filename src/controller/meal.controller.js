@@ -210,47 +210,60 @@ const mealController = {
         });
       }
       if (connection) {
-        connection.query(
-          sqlInsertStatement,
-          [
-            meal.name,
-            meal.description,
-            meal.imageUrl,
-            meal.dateTime,
-            meal.maxAmountOfParticipants,
-            meal.price,
-            userId,
-          ],
-          (err, result, fields) => {
-            if (err) {
-              // Handle the error here
-            }
-            if (result) {
-              const id = result.insertId;
-              logger.trace('Meal successfully Added, id = ' + id);
+        try {
+          connection.query(
+            sqlInsertStatement,
+            [
+              meal.name,
+              meal.description,
+              meal.imageUrl,
+              meal.dateTime,
+              meal.maxAmountOfParticipants,
+              meal.price,
+              userId,
+            ],
+            (err, result, fields) => {
+              if (err) {
+                logger.error(err.message);
+                next(
+                  new Error({
+                    status: 409,
+                    message: err.message,
+                    data: {},
+                  })
+                );
+                return;
+              }
+              if (result) {
+                const id = result.insertId;
+                logger.trace('Meal successfully Added, id = ' + id);
 
-              // SQL statement to select the just inserted meal
-              let sqlSelectStatement = 'SELECT * FROM `meal` WHERE `id` = ?';
-              connection.query(
-                sqlSelectStatement,
-                [id],
-                (err, result, fields) => {
-                  if (err) {
-                    // Handle the error here
+                // SQL statement to select the just inserted meal
+                let sqlSelectStatement = 'SELECT * FROM `meal` WHERE `id` = ?';
+                connection.query(
+                  sqlSelectStatement,
+                  [id],
+                  (err, result, fields) => {
+                    if (err) {
+                      // Handle the error here
+                    }
+
+                    connection.release();
+                    if (result && result.length > 0) {
+                      res.status(201).json({
+                        status: 201,
+                        message: 'Meal successfully added.',
+                        data: result[0],
+                      });
+                    }
                   }
-                  connection.release();
-                  if (result && result.length > 0) {
-                    res.status(201).json({
-                      status: 201,
-                      message: 'Meal successfully added.',
-                      data: result[0],
-                    });
-                  }
-                }
-              );
+                );
+              }
             }
-          }
-        );
+          );
+        } finally {
+          dbconnection.releaseConnection(connection);
+        }
       }
     });
   },
