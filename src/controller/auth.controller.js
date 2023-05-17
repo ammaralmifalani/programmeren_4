@@ -73,7 +73,7 @@ const authController = {
                     status: 200,
                     message: 'Authentication successful!',
                     data: {
-                      userInfo,
+                      ...userInfo,
                       token,
                     },
                   });
