@@ -256,7 +256,7 @@ describe('User API', () => {
         .end((err, res) => {
           res.body.should.be.a('object');
           let { status, message, data } = res.body;
-          status.should.eql(409);
+          status.should.eql(403);
           message.should.be
             .a('string')
             .eql('A user already exists with this email address.');
