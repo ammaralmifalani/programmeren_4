@@ -242,8 +242,8 @@ const userController = {
         if (error) {
           if (error.code === 'ER_DUP_ENTRY') {
             // Send a custom error message to the user
-            res.status(409).json({
-              status: 409,
+            res.status(403).json({
+              status: 403,
               message: 'A user already exists with this email address.',
               data: {},
             });

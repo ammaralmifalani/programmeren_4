@@ -71,7 +71,7 @@ describe('User API', () => {
     it('TC-101-1 | Required field is missing', (done) => {
       chai
         .request(app)
-        .post('/api/auth/login')
+        .post('/api/login')
         .send({
           // Emailaddress is missing
           password: password_test,
@@ -89,7 +89,7 @@ describe('User API', () => {
     it('TC-101-2 | Invalid e-mail address', (done) => {
       chai
         .request(app)
-        .post('/api/auth/login')
+        .post('/api/login')
         .send({
           emailAdress: 'john@gmail',
           password: 'Secret123',
@@ -111,7 +111,7 @@ describe('User API', () => {
       };
       chai
         .request(app)
-        .post('/api/auth/login')
+        .post('/api/login')
         .send(user)
         .end((err, res) => {
           res.body.should.be.an('object');
@@ -130,7 +130,7 @@ describe('User API', () => {
       };
       chai
         .request(app)
-        .post('/api/auth/login')
+        .post('/api/login')
         .send(user)
         .end((err, res) => {
           res.body.should.be.an('object');
@@ -145,7 +145,7 @@ describe('User API', () => {
     it('TC-101-5 | User successfully logged in', (done) => {
       chai
         .request(app)
-        .post('/api/auth/login')
+        .post('/api/login')
         .send({
           emailAdress: 'j.doe@gmail.com',
           password: 'Secret123',
@@ -156,17 +156,14 @@ describe('User API', () => {
           status.should.be.equal(200);
           message.should.be.equal('Authentication successful!');
           data.should.be.an('object');
-          data.should.have.property('userInfo');
-          let { userInfo } = data;
-          userInfo.should.be.an('object');
-          userInfo.should.have.property('firstName');
-          userInfo.should.have.property('lastName');
-          userInfo.should.have.property('isActive');
-          userInfo.should.have.property('emailAdress');
-          userInfo.should.have.property('phoneNumber');
-          userInfo.should.have.property('roles');
-          userInfo.should.have.property('street');
-          userInfo.should.have.property('city');
+          data.should.have.property('firstName');
+          data.should.have.property('lastName');
+          data.should.have.property('isActive');
+          data.should.have.property('emailAdress');
+          data.should.have.property('phoneNumber');
+          data.should.have.property('roles');
+          data.should.have.property('street');
+          data.should.have.property('city');
           data.should.have.property('token');
           token = data.token;
           done();
@@ -259,7 +256,7 @@ describe('User API', () => {
         .end((err, res) => {
           res.body.should.be.a('object');
           let { status, message, data } = res.body;
-          status.should.eql(409);
+          status.should.eql(403);
           message.should.be
             .a('string')
             .eql('A user already exists with this email address.');

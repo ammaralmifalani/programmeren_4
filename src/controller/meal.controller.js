@@ -51,7 +51,7 @@ const mealController = {
   // getAllMeals retrieves all users from the database
   getAllMeals: (req, res, next) => {
     logger.info('Get all meals');
-
+    logger.debug(`Request Method: ${req.method}`);
     let sqlStatement = `
       SELECT 
         meal.*,
@@ -193,9 +193,24 @@ const mealController = {
   createMeal: (req, res, next) => {
     logger.trace('Create a new Meal');
     const meal = req.body;
-    const userId = req.userId;
-    logger.debug('meal: ' + JSON.stringify(meal));
 
+    // meal.dateTime = "CONVERT('2023-05-29T13:02:04.476Z',datetime))";
+    logger.debug('meal.dateTime', meal.dateTime);
+    const userId = req.userId;
+    logger.debug(`Request Method: ${req.method}`);
+    logger.debug(`Request Body: ${JSON.stringify(req.body)}`);
+
+    function isMySQLDateTimeFormat(dateTime) {
+      const mysqlDateTimeFormat =
+        /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(\.\d{6})?$/;
+      return mysqlDateTimeFormat.test(dateTime);
+    }
+    logger.debug('Meal.dateTime', meal.dateTime);
+    if (!isMySQLDateTimeFormat(meal.dateTime)) {
+      let date = new Date(meal.dateTime);
+      meal.dateTime = date.toISOString().slice(0, 19).replace('T', ' ');
+    }
+    logger.debug('Meal.dateTime', meal.dateTime);
     let sqlInsertStatement =
       'INSERT INTO `meal` ( `name`, `description`, `imageUrl`, `dateTime`, `maxAmountOfParticipants`, `price`, `cookId`) VALUES' +
       '(?,?,?,?,?,?,?)';
@@ -210,47 +225,60 @@ const mealController = {
         });
       }
       if (connection) {
-        connection.query(
-          sqlInsertStatement,
-          [
-            meal.name,
-            meal.description,
-            meal.imageUrl,
-            meal.dateTime,
-            meal.maxAmountOfParticipants,
-            meal.price,
-            userId,
-          ],
-          (err, result, fields) => {
-            if (err) {
-              // Handle the error here
-            }
-            if (result) {
-              const id = result.insertId;
-              logger.trace('Meal successfully Added, id = ' + id);
+        try {
+          connection.query(
+            sqlInsertStatement,
+            [
+              meal.name,
+              meal.description,
+              meal.imageUrl,
+              meal.dateTime,
+              meal.maxAmountOfParticipants,
+              meal.price,
+              userId,
+            ],
+            (err, result, fields) => {
+              if (err) {
+                logger.error(err.message);
+                next(
+                  new Error({
+                    status: 409,
+                    message: err.message,
+                    data: {},
+                  })
+                );
+                return;
+              }
+              if (result) {
+                const id = result.insertId;
+                logger.trace('Meal successfully Added, id = ' + id);
 
-              // SQL statement to select the just inserted meal
-              let sqlSelectStatement = 'SELECT * FROM `meal` WHERE `id` = ?';
-              connection.query(
-                sqlSelectStatement,
-                [id],
-                (err, result, fields) => {
-                  if (err) {
-                    // Handle the error here
+                // SQL statement to select the just inserted meal
+                let sqlSelectStatement = 'SELECT * FROM `meal` WHERE `id` = ?';
+                connection.query(
+                  sqlSelectStatement,
+                  [id],
+                  (err, result, fields) => {
+                    if (err) {
+                      // Handle the error here
+                    }
+
+                    connection.release();
+                    if (result && result.length > 0) {
+                      res.status(201).json({
+                        status: 201,
+                        message: 'Meal successfully added.',
+                        data: result[0],
+                      });
+                    }
                   }
-                  connection.release();
-                  if (result && result.length > 0) {
-                    res.status(201).json({
-                      status: 201,
-                      message: 'Meal successfully added.',
-                      data: result[0],
-                    });
-                  }
-                }
-              );
+                );
+              }
             }
-          }
-        );
+          );
+        } finally {
+          dbconnection.releaseConnection(connection);
+        }
       }
     });
   },
@@ -258,6 +286,7 @@ const mealController = {
   deleteMeal: (req, res, next) => {
     const mealId = req.params.mealId;
     const userId = req.userId;
+    logger.debug(`Request Method: ${req.method}`);
     logger.debug('Deleting meal with id: ', mealId);
 
     dbconnection.getConnection(function (err, connection) {
@@ -325,6 +354,8 @@ const mealController = {
   updateMeal: (req, res, next) => {
     let mealId = req.params.mealId;
     let userId = req.userId;
+    logger.debug(`Request Method: ${req.method}`);
+    logger.debug(`Request Body: ${JSON.stringify(req.body)}`);
     logger.debug('USER ID:', userId);
     logger.debug('MEAL ID:', mealId);
     let {
@@ -341,18 +372,29 @@ const mealController = {
       allergenes,
     } = req.body;
 
-    // allergenes = "gluten",   "noten", "lactose";
-
     dbconnection.getConnection(function (err, connection) {
-      if (err) throw err;
+      if (err) {
+        logger.error('Database error:', err);
+        return res.status(500).json({
+          status: 500,
+          message: 'Database error',
+          data: {},
+        });
+      }
 
-      // Use the connection
       connection.query(
         'SELECT * FROM meal WHERE id = ?',
         [mealId],
         function (error, results, fields) {
-          if (error) throw error;
-
+          if (error) {
+            logger.error('Database error:', error);
+            connection.release();
+            return res.status(500).json({
+              status: 500,
+              message: 'Database error',
+              data: {},
+            });
+          }
           // Check if meal exists
           if (results.length === 0) {
             return res.status(404).json({
@@ -361,7 +403,6 @@ const mealController = {
               data: {},
             });
           }
-
           // Check if user is updating their own meal
           if (results[0].cookId != userId) {
             return res.status(403).json({
@@ -370,13 +411,11 @@ const mealController = {
               data: {},
             });
           }
-
           const sql = `
           UPDATE meal 
           SET name = ?, description = ?, isActive = ?, isVega = ?, isVegan = ?, isToTakeHome = ?, dateTime = ?, maxAmountOfParticipants = ?, price = ?, imageUrl = ?, allergenes = ?
           WHERE id = ?
         `;
-
           const values = [
             name,
             description,
@@ -393,16 +432,30 @@ const mealController = {
           ];
           logger.debug('Updating meal with allergenes:', allergenes);
           connection.query(sql, values, function (error, results, fields) {
-            if (error) throw error;
+            if (error) {
+              logger.error('Database error:', error);
+              connection.release();
+              return res.status(500).json({
+                status: 500,
+                message: 'Database error',
+                data: {},
+              });
+            }
 
-            // Get the updated meal details
             connection.query(
               'SELECT * FROM meal WHERE id = ?',
               [mealId],
               function (error, results, fields) {
-                if (error) throw error;
+                if (error) {
+                  logger.error('Database error:', error);
+                  connection.release();
+                  return res.status(500).json({
+                    status: 500,
+                    message: 'Database error',
+                    data: {},
+                  });
+                }
 
-                // Meal was updated successfully
                 res.status(200).json({
                   status: 200,
                   message: `Meal successfully updated`,
@@ -417,9 +470,11 @@ const mealController = {
       );
     });
   },
+
   // getMealById
   getMealById: (req, res, next) => {
     const requestedMealId = req.params.mealId;
+    logger.debug(`Request Method: ${req.method}`);
     logger.info('Requested meal id: ', requestedMealId);
 
     let sqlStatement = `
