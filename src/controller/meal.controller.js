@@ -51,7 +51,7 @@ const mealController = {
   // getAllMeals retrieves all users from the database
   getAllMeals: (req, res, next) => {
     logger.info('Get all meals');
-
+    logger.debug(`Request Method: ${req.method}`);
     let sqlStatement = `
       SELECT 
         meal.*,
@@ -195,16 +195,31 @@ const mealController = {
     const meal = req.body;
     const userId = req.userId;
     logger.debug('meal: ' + JSON.stringify(meal));
-function isMySQLDateTimeFormat(dateTime) {
-  const mysqlDateTimeFormat = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(\.\d{6})?$/;
-  return mysqlDateTimeFormat.test(dateTime);
-}
-    logger.debug('Meal.dateTime',meal.dateTime);
-if (!isMySQLDateTimeFormat(meal.dateTime)) {
-  let date = new Date(meal.dateTime);
-  meal.dateTime = date.toISOString().slice(0, 19).replace('T', ' ');
-}
-  logger.debug('Meal.dateTime',meal.dateTime);
+
+    function isMySQLDateTimeFormat(dateTime) {
+      const mysqlDateTimeFormat =
+        /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(\.\d{6})?$/;
+      return mysqlDateTimeFormat.test(dateTime);
+    }
+    logger.debug('Meal.dateTime', meal.dateTime);
+    if (!isMySQLDateTimeFormat(meal.dateTime)) {
+      let date = new Date(meal.dateTime);
+      meal.dateTime = date.toISOString().slice(0, 19).replace('T', ' ');
+    }
+    logger.debug('Meal.dateTime', meal.dateTime);
+
+    function isMySQLDateTimeFormat(dateTime) {
+      const mysqlDateTimeFormat =
+        /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(\.\d{6})?$/;
+      return mysqlDateTimeFormat.test(dateTime);
+    }
+    logger.debug('Meal.dateTime', meal.dateTime);
+    if (!isMySQLDateTimeFormat(meal.dateTime)) {
+      let date = new Date(meal.dateTime);
+      meal.dateTime = date.toISOString().slice(0, 19).replace('T', ' ');
+    }
+    logger.debug('Meal.dateTime', meal.dateTime);
+
     let sqlInsertStatement =
       'INSERT INTO `meal` ( `name`, `description`, `imageUrl`, `dateTime`, `maxAmountOfParticipants`, `price`, `cookId`) VALUES' +
       '(?,?,?,?,?,?,?)';
@@ -280,6 +295,7 @@ if (!isMySQLDateTimeFormat(meal.dateTime)) {
   deleteMeal: (req, res, next) => {
     const mealId = req.params.mealId;
     const userId = req.userId;
+    logger.debug(`Request Method: ${req.method}`);
     logger.debug('Deleting meal with id: ', mealId);
 
     dbconnection.getConnection(function (err, connection) {
@@ -347,6 +363,8 @@ if (!isMySQLDateTimeFormat(meal.dateTime)) {
   updateMeal: (req, res, next) => {
     let mealId = req.params.mealId;
     let userId = req.userId;
+    logger.debug(`Request Method: ${req.method}`);
+    logger.debug(`Request Body: ${JSON.stringify(req.body)}`);
     logger.debug('USER ID:', userId);
     logger.debug('MEAL ID:', mealId);
     let {
@@ -363,18 +381,29 @@ if (!isMySQLDateTimeFormat(meal.dateTime)) {
       allergenes,
     } = req.body;
 
-    // allergenes = "gluten",   "noten", "lactose";
-
     dbconnection.getConnection(function (err, connection) {
-      if (err) throw err;
+      if (err) {
+        logger.error('Database error:', err);
+        return res.status(500).json({
+          status: 500,
+          message: 'Database error',
+          data: {},
+        });
+      }
 
-      // Use the connection
       connection.query(
         'SELECT * FROM meal WHERE id = ?',
         [mealId],
         function (error, results, fields) {
-          if (error) throw error;
-
+          if (error) {
+            logger.error('Database error:', error);
+            connection.release();
+            return res.status(500).json({
+              status: 500,
+              message: 'Database error',
+              data: {},
+            });
+          }
           // Check if meal exists
           if (results.length === 0) {
             return res.status(404).json({
@@ -383,7 +412,6 @@ if (!isMySQLDateTimeFormat(meal.dateTime)) {
               data: {},
             });
           }
-
           // Check if user is updating their own meal
           if (results[0].cookId != userId) {
             return res.status(403).json({
@@ -392,13 +420,11 @@ if (!isMySQLDateTimeFormat(meal.dateTime)) {
               data: {},
             });
           }
-
           const sql = `
           UPDATE meal 
           SET name = ?, description = ?, isActive = ?, isVega = ?, isVegan = ?, isToTakeHome = ?, dateTime = ?, maxAmountOfParticipants = ?, price = ?, imageUrl = ?, allergenes = ?
           WHERE id = ?
         `;
-
           const values = [
             name,
             description,
@@ -415,16 +441,30 @@ if (!isMySQLDateTimeFormat(meal.dateTime)) {
           ];
           logger.debug('Updating meal with allergenes:', allergenes);
           connection.query(sql, values, function (error, results, fields) {
-            if (error) throw error;
+            if (error) {
+              logger.error('Database error:', error);
+              connection.release();
+              return res.status(500).json({
+                status: 500,
+                message: 'Database error',
+                data: {},
+              });
+            }
 
-            // Get the updated meal details
             connection.query(
               'SELECT * FROM meal WHERE id = ?',
               [mealId],
               function (error, results, fields) {
-                if (error) throw error;
+                if (error) {
+                  logger.error('Database error:', error);
+                  connection.release();
+                  return res.status(500).json({
+                    status: 500,
+                    message: 'Database error',
+                    data: {},
+                  });
+                }
 
-                // Meal was updated successfully
                 res.status(200).json({
                   status: 200,
                   message: `Meal successfully updated`,
@@ -439,9 +479,11 @@ if (!isMySQLDateTimeFormat(meal.dateTime)) {
       );
     });
   },
+
   // getMealById
   getMealById: (req, res, next) => {
     const requestedMealId = req.params.mealId;
+    logger.debug(`Request Method: ${req.method}`);
     logger.info('Requested meal id: ', requestedMealId);
 
     let sqlStatement = `
