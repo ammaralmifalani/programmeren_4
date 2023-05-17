@@ -600,6 +600,8 @@ describe('User API', () => {
         emailAdress: 'j.doe@server.com',
         password: 'Secret123',
         phoneNumber: '0612425475',
+        isActive: false,
+        roles: 'editor',
       };
       chai
         .request(app)
