@@ -155,7 +155,6 @@ const mealController = {
       }
     });
   },
-
   // getAllMeals: (req, res, next) => {
   //   logger.info('Get all meals');
 
@@ -587,7 +586,6 @@ const mealController = {
       );
     });
   },
-
   // getMealById
   getMealById: (req, res, next) => {
     const requestedMealId = req.params.mealId;
