@@ -209,18 +209,6 @@ const mealController = {
     }
     logger.debug('Meal.dateTime', meal.dateTime);
 
-    function isMySQLDateTimeFormat(dateTime) {
-      const mysqlDateTimeFormat =
-        /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(\.\d{6})?$/;
-      return mysqlDateTimeFormat.test(dateTime);
-    }
-    logger.debug('Meal.dateTime', meal.dateTime);
-    if (!isMySQLDateTimeFormat(meal.dateTime)) {
-      let date = new Date(meal.dateTime);
-      meal.dateTime = date.toISOString().slice(0, 19).replace('T', ' ');
-    }
-    logger.debug('Meal.dateTime', meal.dateTime);
-
     let sqlInsertStatement =
       'INSERT INTO `meal` ( `name`, `description`, `imageUrl`, `dateTime`, `maxAmountOfParticipants`, `price`, `cookId`) VALUES' +
       '(?,?,?,?,?,?,?)';
@@ -361,6 +349,125 @@ const mealController = {
     });
   },
   // updateMeal updates a meal's information in the database
+  // updateMeal: (req, res, next) => {
+  //   let mealId = req.params.mealId;
+  //   let userId = req.userId;
+  //   logger.debug(`Request Method: ${req.method}`);
+  //   logger.debug(`Request Body: ${JSON.stringify(req.body)}`);
+  //   logger.debug('USER ID:', userId);
+  //   logger.debug('MEAL ID:', mealId);
+  //   let {
+  //     name,
+  //     description,
+  //     isActive,
+  //     isVega,
+  //     isVegan,
+  //     isToTakeHome,
+  //     dateTime,
+  //     maxAmountOfParticipants,
+  //     price,
+  //     imageUrl,
+  //     allergenes,
+  //   } = req.body;
+
+  //   dbconnection.getConnection(function (err, connection) {
+  //     if (err) {
+  //       logger.error('Database error:', err);
+  //       return res.status(500).json({
+  //         status: 500,
+  //         message: 'Database error',
+  //         data: {},
+  //       });
+  //     }
+
+  //     connection.query(
+  //       'SELECT * FROM meal WHERE id = ?',
+  //       [mealId],
+  //       function (error, results, fields) {
+  //         if (error) {
+  //           logger.error('Database error:', error);
+  //           connection.release();
+  //           return res.status(500).json({
+  //             status: 500,
+  //             message: 'Database error',
+  //             data: {},
+  //           });
+  //         }
+  //         // Check if meal exists
+  //         if (results.length === 0) {
+  //           return res.status(404).json({
+  //             status: 404,
+  //             message: 'Meal not found',
+  //             data: {},
+  //           });
+  //         }
+  //         // Check if user is updating their own meal
+  //         if (results[0].cookId != userId) {
+  //           return res.status(403).json({
+  //             status: 403,
+  //             message: 'You can only update your own meals',
+  //             data: {},
+  //           });
+  //         }
+  //         const sql = `
+  //         UPDATE meal
+  //         SET name = ?, description = ?, isActive = ?, isVega = ?, isVegan = ?, isToTakeHome = ?, dateTime = ?, maxAmountOfParticipants = ?, price = ?, imageUrl = ?, allergenes = ?
+  //         WHERE id = ?
+  //       `;
+  //         const values = [
+  //           name,
+  //           description,
+  //           isActive,
+  //           isVega,
+  //           isVegan,
+  //           isToTakeHome,
+  //           dateTime,
+  //           maxAmountOfParticipants,
+  //           price,
+  //           imageUrl,
+  //           allergenes,
+  //           mealId,
+  //         ];
+  //         logger.debug('Updating meal with allergenes:', allergenes);
+  //         connection.query(sql, values, function (error, results, fields) {
+  //           if (error) {
+  //             logger.error('Database error:', error);
+  //             connection.release();
+  //             return res.status(500).json({
+  //               status: 500,
+  //               message: 'Database error',
+  //               data: {},
+  //             });
+  //           }
+
+  //           connection.query(
+  //             'SELECT * FROM meal WHERE id = ?',
+  //             [mealId],
+  //             function (error, results, fields) {
+  //               if (error) {
+  //                 logger.error('Database error:', error);
+  //                 connection.release();
+  //                 return res.status(500).json({
+  //                   status: 500,
+  //                   message: 'Database error',
+  //                   data: {},
+  //                 });
+  //               }
+
+  //               res.status(200).json({
+  //                 status: 200,
+  //                 message: `Meal successfully updated`,
+  //                 data: fun.convertMealProperties(results[0]),
+  //               });
+
+  //               connection.release();
+  //             }
+  //           );
+  //         });
+  //       }
+  //     );
+  //   });
+  // },
   updateMeal: (req, res, next) => {
     let mealId = req.params.mealId;
     let userId = req.userId;
@@ -368,19 +475,6 @@ const mealController = {
     logger.debug(`Request Body: ${JSON.stringify(req.body)}`);
     logger.debug('USER ID:', userId);
     logger.debug('MEAL ID:', mealId);
-    let {
-      name,
-      description,
-      isActive,
-      isVega,
-      isVegan,
-      isToTakeHome,
-      dateTime,
-      maxAmountOfParticipants,
-      price,
-      imageUrl,
-      allergenes,
-    } = req.body;
 
     dbconnection.getConnection(function (err, connection) {
       if (err) {
@@ -421,26 +515,36 @@ const mealController = {
               data: {},
             });
           }
+
+          // Combine current meal values with new ones from request body
+          let updatedMeal = {
+            ...results[0],
+            ...req.body,
+          };
+
           const sql = `
-          UPDATE meal 
+          UPDATE meal
           SET name = ?, description = ?, isActive = ?, isVega = ?, isVegan = ?, isToTakeHome = ?, dateTime = ?, maxAmountOfParticipants = ?, price = ?, imageUrl = ?, allergenes = ?
           WHERE id = ?
         `;
           const values = [
-            name,
-            description,
-            isActive,
-            isVega,
-            isVegan,
-            isToTakeHome,
-            dateTime,
-            maxAmountOfParticipants,
-            price,
-            imageUrl,
-            allergenes,
+            updatedMeal.name,
+            updatedMeal.description,
+            updatedMeal.isActive,
+            updatedMeal.isVega,
+            updatedMeal.isVegan,
+            updatedMeal.isToTakeHome,
+            updatedMeal.dateTime,
+            updatedMeal.maxAmountOfParticipants,
+            updatedMeal.price,
+            updatedMeal.imageUrl,
+            updatedMeal.allergenes,
             mealId,
           ];
-          logger.debug('Updating meal with allergenes:', allergenes);
+          logger.debug(
+            'Updating meal with allergenes:',
+            updatedMeal.allergenes
+          );
           connection.query(sql, values, function (error, results, fields) {
             if (error) {
               logger.error('Database error:', error);
