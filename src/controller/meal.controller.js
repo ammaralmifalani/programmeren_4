@@ -521,7 +521,10 @@ const mealController = {
             ...results[0],
             ...req.body,
           };
-
+          // If updatedMeal.allergenes is an array, join it into a string
+          if (Array.isArray(updatedMeal.allergenes)) {
+            updatedMeal.allergenes = updatedMeal.allergenes.join(',');
+          }
           const sql = `
           UPDATE meal
           SET name = ?, description = ?, isActive = ?, isVega = ?, isVegan = ?, isToTakeHome = ?, dateTime = ?, maxAmountOfParticipants = ?, price = ?, imageUrl = ?, allergenes = ?
