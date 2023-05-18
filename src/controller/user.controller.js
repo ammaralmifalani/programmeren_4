@@ -15,7 +15,7 @@ const VALID_FIELDS = [
 ];
 function buildSqlStatement(queryField) {
   let sqlStatement =
-    'SELECT id, firstName, lastName, emailAdress, phoneNumber, city, street, isActive, roles FROM `user`';
+    'SELECT id, firstName, lastName, emailAdress, password, phoneNumber, city, street, isActive, roles FROM `user`';
   let params = [];
   let conditions = [];
   let invalidFieldName = null;
