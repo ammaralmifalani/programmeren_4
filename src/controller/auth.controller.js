@@ -57,6 +57,7 @@ const authController = {
           } else {
             logger.debug('USER ID:', results[0].id);
             logger.debug('Password matches, generating JWT...');
+            results[0] = fun.convertIsActiveToBoolean(results[0]);
             const { password, ...userInfo } = results[0];
             const payload = { userId: results[0].id };
             jwt.sign(

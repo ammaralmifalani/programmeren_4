@@ -2,28 +2,63 @@ const fun = require('./function');
 const assert = require('assert');
 const dbconnection = require('../database/dbconnection');
 const logger = require('../test/utils/utils').logger;
+const VALID_FIELDS = [
+  'id',
+  'firstName',
+  'lastName',
+  'emailAdress',
+  'phoneNumber',
+  'city',
+  'street',
+  'isActive',
+  'roles',
+];
+function buildSqlStatement(queryField) {
+  let sqlStatement =
+    'SELECT id, firstName, lastName, emailAdress, phoneNumber, city, street, isActive, roles FROM `user`';
+  let params = [];
+  let conditions = [];
+  let invalidFieldName = null;
 
+  for (let field in queryField) {
+    let value = queryField[field];
+
+    if (!VALID_FIELDS.includes(field)) {
+      invalidFieldName = field;
+      break;
+    }
+
+    if (!value) continue;
+
+    if (value.toLowerCase() === 'true') {
+      value = 1;
+    } else if (value.toLowerCase() === 'false') {
+      value = 0;
+    }
+
+    conditions.push(`\`${field}\` = ?`);
+    params.push(value);
+  }
+
+  if (invalidFieldName) {
+    return { error: `Invalid field in filter: ${invalidFieldName}.` };
+  }
+
+  if (conditions.length > 0) {
+    sqlStatement += ' WHERE ' + conditions.slice(0, 2).join(' AND ');
+  }
+
+  return { sqlStatement, params };
+}
 // userController handles the routes for creating, updating, deleting, and retrieving user data
 const userController = {
   // getAllUsers retrieves all users from the database
-  getAllUsers: (req, res, next) => {
+  getAllUsers(req, res, next) {
     logger.trace('Get all users');
-
-    const queryField = Object.entries(req.query);
-    let sqlStatement =
-      'SELECT id,firstName, lastName, emailAdress, phoneNumber, city, street,isActive,roles FROM `user`';
-    let params = [];
-
-    if (queryField.length === 2) {
-      logger.trace(
-        'Dit is field 1 = ' + queryField[0][0] + ' = ' + queryField[0][1]
-      );
-      sqlStatement += ` WHERE \`${queryField[0][0]}\` = ? AND \`${queryField[1][0]}\` = ?`;
-      params.push(queryField[0][1]);
-      params.push(queryField[1][1]);
-    } else if (queryField.length === 1) {
-      sqlStatement += ` WHERE \`${queryField[0][0]}\` = ?`;
-      params.push(queryField[0][1]);
+    const { error, sqlStatement, params } = buildSqlStatement(req.query);
+    if (error) {
+      res.status(400).json({ status: 400, message: error, data: {} });
+      return;
     }
 
     dbconnection.getConnection(function (err, conn) {
@@ -526,7 +561,6 @@ const userController = {
       );
     });
   },
-
   // getUserProfile retrieves a user's profile information based on their email and password
   getUserProfile: (req, res, next) => {
     let id = req.userId;
