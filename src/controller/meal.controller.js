@@ -592,6 +592,7 @@ const mealController = {
         [mealId],
         function (error, mealResults, fields) {
           if (error) {
+            connection.release();
             logger.error('Database query error:', error);
             return res.status(500).json({
               status: 500,
@@ -609,6 +610,7 @@ const mealController = {
               [mealId],
               function (error, participantResults, fields) {
                 if (error) {
+                  connection.release();
                   logger.error('Database query error:', error);
                   return res.status(500).json({
                     status: 500,
@@ -624,6 +626,7 @@ const mealController = {
                     [userId, mealId],
                     function (error, insertResults, fields) {
                       if (error) {
+                        connection.release();
                         logger.error('Database query error:', error);
                         return res.status(500).json({
                           status: 500,
@@ -640,6 +643,7 @@ const mealController = {
                     }
                   );
                 } else {
+                  connection.release();
                   logger.debug('Maximum participants reached for meal');
                   res.status(403).json({
                     status: 403,
@@ -651,6 +655,7 @@ const mealController = {
               }
             );
           } else {
+            connection.release();
             logger.debug('No meal found with provided ID');
             res.status(404).json({
               status: 404,
