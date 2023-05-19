@@ -3,8 +3,7 @@ name: Testing and deployment
 on:
   push:
     branches:
-      # - main
-      - fix/code-repair
+      - main
 
 jobs:
   integrationtests:
@@ -55,7 +54,7 @@ jobs:
 
   Railway-deploy:
     # Deze optie moet je aanzetten zodra je de tests hebt uitgewerkt.
-    # needs: integrationtests
+    needs: integrationtests
     runs-on: ubuntu-latest
     environment:
       name: Railway # naam van mijn environment op GitHub

@@ -1,5 +1,4 @@
 const fun = require('./function');
-const assert = require('assert');
 const dbconnection = require('../database/dbconnection');
 const logger = require('../test/utils/utils').logger;
 const VALID_FIELDS = [

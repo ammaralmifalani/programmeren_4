@@ -716,7 +716,7 @@ const mealController = {
         logger.error('Database connection error:', err);
         return res.status(500).json({
           status: 500,
-          message: 'Database connection error',
+          message: err.message,
           data: {},
         });
       }
@@ -729,7 +729,7 @@ const mealController = {
             logger.error('Database query error:', error);
             return res.status(500).json({
               status: 500,
-              message: 'Database query error',
+              message: error.message,
               data: {},
             });
           }
@@ -745,7 +745,7 @@ const mealController = {
                   logger.error('Database query error:', error);
                   return res.status(500).json({
                     status: 500,
-                    message: 'Database query error',
+                    message: error.message,
                     data: {},
                   });
                 }
@@ -759,7 +759,7 @@ const mealController = {
                         logger.error('Database query error:', error);
                         return res.status(500).json({
                           status: 500,
-                          message: 'Database query error',
+                          message: error.message,
                           data: {},
                         });
                       }
@@ -802,7 +802,7 @@ const mealController = {
         logger.error('Database connection error:', err);
         return res.status(500).json({
           status: 500,
-          message: 'Database connection error',
+          message: err.message,
           data: {},
         });
       }
@@ -815,7 +815,7 @@ const mealController = {
             logger.error('Database query error:', error);
             return res.status(500).json({
               status: 500,
-              message: 'Database query error',
+              message: error.message,
               data: {},
             });
           }
@@ -829,7 +829,7 @@ const mealController = {
                   logger.error('Database query error:', error);
                   return res.status(500).json({
                     status: 500,
-                    message: 'Database query error',
+                    message: error.message,
                     data: {},
                   });
                 }
@@ -843,7 +843,7 @@ const mealController = {
                         logger.error('Database query error:', error);
                         return res.status(500).json({
                           status: 500,
-                          message: 'Database query error',
+                          message: error.message,
                           data: {},
                         });
                       }
