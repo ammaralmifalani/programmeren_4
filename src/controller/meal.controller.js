@@ -82,15 +82,19 @@ const mealController = {
 
     dbconnection.getConnection(function (err, conn) {
       if (err) {
-        console.log('error', err);
-        next('error: ' + err.message);
+        logger.error('Database connection error:', err);
+        return res.status(500).json({
+          status: 500,
+          message: err.message,
+          data: {},
+        });
       }
       if (conn) {
         conn.query(sqlStatement, function (err, results, fields) {
           if (err) {
-            logger.trace(err.message);
-            next({
-              status: 409,
+            logger.error('Database query error:', err);
+            return res.status(500).json({
+              status: 500,
               message: err.message,
               data: {},
             });
@@ -155,40 +159,6 @@ const mealController = {
       }
     });
   },
-  // getAllMeals: (req, res, next) => {
-  //   logger.info('Get all meals');
-
-  //   let sqlStatement = 'SELECT * FROM `meal`';
-
-  //   dbconnection.getConnection(function (err, conn) {
-  //     // Do something with the connection
-  //     if (err) {
-  //       console.log('error', err);
-  //       next('error: ' + err.message);
-  //     }
-  //     if (conn) {
-  //       conn.query(sqlStatement, function (err, results, fields) {
-  //         if (err) {
-  //           logger.err(err.message);
-  //           next({
-  //             status: 409,
-  //             message: err.message,
-  //             data: {},
-  //           });
-  //         }
-  //         if (results) {
-  //           logger.info('Found', results.length, 'results');
-  //           res.status(200).json({
-  //             status: 200,
-  //             message: 'Meal getAll endpoint',
-  //             data: results,
-  //           });
-  //         }
-  //       });
-  //       dbconnection.releaseConnection(conn);
-  //     }
-  //   });
-  // },
   // CreateUser creates a new user and adds it to the database
   createMeal: (req, res, next) => {
     logger.trace('Create a new Meal');
@@ -214,10 +184,10 @@ const mealController = {
 
     dbconnection.getConnection(function (err, connection) {
       if (err) {
-        logger.error('Database error:', err);
+        logger.error('Database connection error:', err);
         return res.status(500).json({
           status: 500,
-          message: 'Database error',
+          message: err.message,
           data: {},
         });
       }
@@ -236,15 +206,12 @@ const mealController = {
             ],
             (err, result, fields) => {
               if (err) {
-                logger.error(err.message);
-                next(
-                  new Error({
-                    status: 409,
-                    message: err.message,
-                    data: {},
-                  })
-                );
-                return;
+                logger.error('Database query error:', err);
+                return res.status(500).json({
+                  status: 500,
+                  message: err.message,
+                  data: {},
+                });
               }
               if (result) {
                 const id = result.insertId;
@@ -257,7 +224,12 @@ const mealController = {
                   [id],
                   (err, result, fields) => {
                     if (err) {
-                      // Handle the error here
+                      logger.error('Database query error:', err);
+                      return res.status(500).json({
+                        status: 500,
+                        message: err.message,
+                        data: {},
+                      });
                     }
 
                     connection.release();
@@ -288,9 +260,12 @@ const mealController = {
 
     dbconnection.getConnection(function (err, connection) {
       if (err) {
-        logger.error('Error getting database connection:', err);
-        next(err);
-        return;
+        logger.error('Database connection error:', err);
+        return res.status(500).json({
+          status: 500,
+          message: err.message,
+          data: {},
+        });
       }
 
       connection.query(
@@ -298,10 +273,12 @@ const mealController = {
         [mealId],
         function (err, results) {
           if (err) {
-            logger.error('Error executing SELECT query:', err);
-            connection.release();
-            next(err);
-            return;
+            logger.error('Database query error:', err);
+            return res.status(500).json({
+              status: 500,
+              message: err.message,
+              data: {},
+            });
           }
 
           if (results.length > 0) {
@@ -320,9 +297,12 @@ const mealController = {
               [mealId, userId],
               function (err, results) {
                 if (err) {
-                  logger.error('Error executing DELETE query:', err);
-                  next(err);
-                  return;
+                  logger.error('Database query error:', err);
+                  return res.status(500).json({
+                    status: 500,
+                    message: err.message,
+                    data: {},
+                  });
                 }
                 connection.release();
 
@@ -357,10 +337,10 @@ const mealController = {
 
     dbconnection.getConnection(function (err, connection) {
       if (err) {
-        logger.error('Database error:', err);
+        logger.error('Database connection error:', err);
         return res.status(500).json({
           status: 500,
-          message: 'Database error',
+          message: err.message,
           data: {},
         });
       }
@@ -371,11 +351,10 @@ const mealController = {
         [mealId],
         function (error, results, fields) {
           if (error) {
-            logger.error('Database error:', error);
-            connection.release();
+            logger.error('Database query error:', error);
             return res.status(500).json({
               status: 500,
-              message: 'Database error',
+              message: error.message,
               data: {},
             });
           }
@@ -433,11 +412,10 @@ const mealController = {
           );
           connection.query(sql, values, function (error, results, fields) {
             if (error) {
-              logger.error('Database error:', error);
-              connection.release();
+              logger.error('Database query error:', error);
               return res.status(500).json({
                 status: 500,
-                message: 'Database error',
+                message: error.message,
                 data: {},
               });
             }
@@ -448,11 +426,10 @@ const mealController = {
               [mealId],
               function (error, results, fields) {
                 if (error) {
-                  logger.error('Database error:', error);
-                  connection.release();
+                  logger.error('Database query error:', error);
                   return res.status(500).json({
                     status: 500,
-                    message: 'Database error',
+                    message: error.message,
                     data: {},
                   });
                 }
@@ -472,125 +449,6 @@ const mealController = {
       );
     });
   },
-  //   let mealId = req.params.mealId;
-  //   let userId = req.userId;
-  //   logger.debug(`Request Method: ${req.method}`);
-  //   logger.debug(`Request Body: ${JSON.stringify(req.body)}`);
-  //   logger.debug('USER ID:', userId);
-  //   logger.debug('MEAL ID:', mealId);
-  //   let {
-  //     name,
-  //     description,
-  //     isActive,
-  //     isVega,
-  //     isVegan,
-  //     isToTakeHome,
-  //     dateTime,
-  //     maxAmountOfParticipants,
-  //     price,
-  //     imageUrl,
-  //     allergenes,
-  //   } = req.body;
-
-  //   dbconnection.getConnection(function (err, connection) {
-  //     if (err) {
-  //       logger.error('Database error:', err);
-  //       return res.status(500).json({
-  //         status: 500,
-  //         message: 'Database error',
-  //         data: {},
-  //       });
-  //     }
-
-  //     connection.query(
-  //       'SELECT * FROM meal WHERE id = ?',
-  //       [mealId],
-  //       function (error, results, fields) {
-  //         if (error) {
-  //           logger.error('Database error:', error);
-  //           connection.release();
-  //           return res.status(500).json({
-  //             status: 500,
-  //             message: 'Database error',
-  //             data: {},
-  //           });
-  //         }
-  //         // Check if meal exists
-  //         if (results.length === 0) {
-  //           return res.status(404).json({
-  //             status: 404,
-  //             message: 'Meal not found',
-  //             data: {},
-  //           });
-  //         }
-  //         // Check if user is updating their own meal
-  //         if (results[0].cookId != userId) {
-  //           return res.status(403).json({
-  //             status: 403,
-  //             message: 'You can only update your own meals',
-  //             data: {},
-  //           });
-  //         }
-  //         const sql = `
-  //         UPDATE meal
-  //         SET name = ?, description = ?, isActive = ?, isVega = ?, isVegan = ?, isToTakeHome = ?, dateTime = ?, maxAmountOfParticipants = ?, price = ?, imageUrl = ?, allergenes = ?
-  //         WHERE id = ?
-  //       `;
-  //         const values = [
-  //           name,
-  //           description,
-  //           isActive,
-  //           isVega,
-  //           isVegan,
-  //           isToTakeHome,
-  //           dateTime,
-  //           maxAmountOfParticipants,
-  //           price,
-  //           imageUrl,
-  //           allergenes,
-  //           mealId,
-  //         ];
-  //         logger.debug('Updating meal with allergenes:', allergenes);
-  //         connection.query(sql, values, function (error, results, fields) {
-  //           if (error) {
-  //             logger.error('Database error:', error);
-  //             connection.release();
-  //             return res.status(500).json({
-  //               status: 500,
-  //               message: 'Database error',
-  //               data: {},
-  //             });
-  //           }
-
-  //           connection.query(
-  //             'SELECT * FROM meal WHERE id = ?',
-  //             [mealId],
-  //             function (error, results, fields) {
-  //               if (error) {
-  //                 logger.error('Database error:', error);
-  //                 connection.release();
-  //                 return res.status(500).json({
-  //                   status: 500,
-  //                   message: 'Database error',
-  //                   data: {},
-  //                 });
-  //               }
-
-  //               res.status(200).json({
-  //                 status: 200,
-  //                 message: `Meal successfully updated`,
-  //                 data: fun.convertMealProperties(results[0]),
-  //               });
-
-  //               connection.release();
-  //             }
-  //           );
-  //         });
-  //       }
-  //     );
-  //   });
-  // },
-
   // getMealById
   getMealById: (req, res, next) => {
     const requestedMealId = req.params.mealId;
@@ -627,9 +485,12 @@ const mealController = {
 
     dbconnection.getConnection(function (err, conn) {
       if (err) {
-        logger.error('Error', err);
-        next('Error: ' + err.message);
-        return;
+        logger.error('Database connection error:', err);
+        return res.status(500).json({
+          status: 500,
+          message: err.message,
+          data: {},
+        });
       }
 
       if (conn) {
@@ -638,13 +499,12 @@ const mealController = {
           [requestedMealId],
           function (err, results, fields) {
             if (err) {
-              logger.error(err.message);
-              next({
-                status: 409,
+              logger.error('Database query error:', err);
+              return res.status(500).json({
+                status: 500,
                 message: err.message,
                 data: {},
               });
-              return;
             }
 
             if (results && results.length > 0) {

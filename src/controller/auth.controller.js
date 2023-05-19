@@ -26,9 +26,12 @@ const authController = {
 
     dbconnection.getConnection((err, connection) => {
       if (err) {
-        logger.error('Error getting connection from pool');
-        res.status(500).json({ status: 500, message: err.message, data: {} });
-        return;
+        logger.error('Database connection error:', err);
+        return res.status(500).json({
+          status: 500,
+          message: err.message,
+          data: {},
+        });
       }
 
       const { emailAdress, password } = credentials;
@@ -43,9 +46,12 @@ const authController = {
           );
           console.log('emailAdress: ' + emailAdress);
           if (error) {
-            res
-              .status(500)
-              .json({ status: 500, message: error.message, data: {} });
+            logger.error('Database query error:', error);
+            return res.status(500).json({
+              status: 500,
+              message: error.message,
+              data: {},
+            });
           } else if (!results.length) {
             res
               .status(404)
@@ -67,6 +73,11 @@ const authController = {
               (err, token) => {
                 if (err) {
                   logger.error('Error signing JWT:', err);
+                  return res.status(500).json({
+                    status: 500,
+                    message: err.message,
+                    data: {},
+                  });
                 }
                 if (token) {
                   logger.info('JWT generated:', token);
