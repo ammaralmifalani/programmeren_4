@@ -23,12 +23,12 @@ mealRouter.post(
   mealController.validateMeal,
   mealController.createMeal
 );
-mealRouter.put(
-  '/:mealId',
-  authController.validateToken,
-  mealController.validateMeal,
-  mealController.updateMeal
-);
+// mealRouter.put(
+//   '/:mealId',
+//   authController.validateToken,
+//   mealController.validateMeal,
+//   mealController.updateMeal
+// );
 mealRouter.get('/:mealId', mealController.getMealById);
 mealRouter.delete(
   '/:mealId/participate',
