@@ -347,8 +347,131 @@ const mealController = {
       );
     });
   },
-  // updateMeal updates a meal's information in the database
-  // updateMeal: (req, res, next) => {
+  updateMeal: (req, res, next) => {
+    let mealId = req.params.mealId;
+    let userId = req.userId;
+    logger.debug(`Request Method: ${req.method}`);
+    logger.debug(`Request Body: ${JSON.stringify(req.body)}`);
+    logger.debug('USER ID:', userId);
+    logger.debug('MEAL ID:', mealId);
+
+    dbconnection.getConnection(function (err, connection) {
+      if (err) {
+        logger.error('Database error:', err);
+        return res.status(500).json({
+          status: 500,
+          message: 'Database error',
+          data: {},
+        });
+      }
+      logger.debug('Database connection established');
+
+      connection.query(
+        'SELECT * FROM meal WHERE id = ?',
+        [mealId],
+        function (error, results, fields) {
+          if (error) {
+            logger.error('Database error:', error);
+            connection.release();
+            return res.status(500).json({
+              status: 500,
+              message: 'Database error',
+              data: {},
+            });
+          }
+          logger.debug('Retrieved meal information');
+          // Check if meal exists
+          if (results.length === 0) {
+            logger.debug('Meal not found');
+            return res.status(404).json({
+              status: 404,
+              message: 'Meal not found',
+              data: {},
+            });
+          }
+          // Check if user is updating their own meal
+          if (results[0].cookId != userId) {
+            logger.debug('User is not the creator of the meal');
+            return res.status(403).json({
+              status: 403,
+              message: 'You can only update your own meals',
+              data: {},
+            });
+          }
+
+          // Combine current meal values with new ones from request body
+          let updatedMeal = {
+            ...results[0],
+            ...req.body,
+          };
+          // If updatedMeal.allergenes is an array, join it into a string
+          if (Array.isArray(updatedMeal.allergenes)) {
+            updatedMeal.allergenes = updatedMeal.allergenes.join(',');
+          }
+          const sql = `
+          UPDATE meal
+          SET name = ?, description = ?, isActive = ?, isVega = ?, isVegan = ?, isToTakeHome = ?, dateTime = ?, maxAmountOfParticipants = ?, price = ?, imageUrl = ?, allergenes = ?
+          WHERE id = ?
+        `;
+          const values = [
+            updatedMeal.name,
+            updatedMeal.description,
+            updatedMeal.isActive,
+            updatedMeal.isVega,
+            updatedMeal.isVegan,
+            updatedMeal.isToTakeHome,
+            updatedMeal.dateTime,
+            updatedMeal.maxAmountOfParticipants,
+            updatedMeal.price,
+            updatedMeal.imageUrl,
+            updatedMeal.allergenes,
+            mealId,
+          ];
+          logger.debug(
+            'Updating meal with allergenes:',
+            updatedMeal.allergenes
+          );
+          connection.query(sql, values, function (error, results, fields) {
+            if (error) {
+              logger.error('Database error:', error);
+              connection.release();
+              return res.status(500).json({
+                status: 500,
+                message: 'Database error',
+                data: {},
+              });
+            }
+            logger.debug('Meal updated in the database');
+
+            connection.query(
+              'SELECT * FROM meal WHERE id = ?',
+              [mealId],
+              function (error, results, fields) {
+                if (error) {
+                  logger.error('Database error:', error);
+                  connection.release();
+                  return res.status(500).json({
+                    status: 500,
+                    message: 'Database error',
+                    data: {},
+                  });
+                }
+                logger.debug('Retrieved updated meal information');
+
+                res.status(200).json({
+                  status: 200,
+                  message: `Meal successfully updated`,
+                  data: fun.convertMealProperties(results[0]),
+                });
+
+                connection.release();
+              }
+            );
+          });
+        }
+      );
+    });
+  },
   //   let mealId = req.params.mealId;
   //   let userId = req.userId;
   //   logger.debug(`Request Method: ${req.method}`);
@@ -467,125 +590,7 @@ const mealController = {
   //     );
   //   });
   // },
-  updateMeal: (req, res, next) => {
-    let mealId = req.params.mealId;
-    let userId = req.userId;
-    logger.debug(`Request Method: ${req.method}`);
-    logger.debug(`Request Body: ${JSON.stringify(req.body)}`);
-    logger.debug('USER ID:', userId);
-    logger.debug('MEAL ID:', mealId);
 
-    dbconnection.getConnection(function (err, connection) {
-      if (err) {
-        logger.error('Database error:', err);
-        return res.status(500).json({
-          status: 500,
-          message: 'Database error',
-          data: {},
-        });
-      }
-
-      connection.query(
-        'SELECT * FROM meal WHERE id = ?',
-        [mealId],
-        function (error, results, fields) {
-          if (error) {
-            logger.error('Database error:', error);
-            connection.release();
-            return res.status(500).json({
-              status: 500,
-              message: 'Database error',
-              data: {},
-            });
-          }
-          // Check if meal exists
-          if (results.length === 0) {
-            return res.status(404).json({
-              status: 404,
-              message: 'Meal not found',
-              data: {},
-            });
-          }
-          // Check if user is updating their own meal
-          if (results[0].cookId != userId) {
-            return res.status(403).json({
-              status: 403,
-              message: 'You can only update your own meals',
-              data: {},
-            });
-          }
-
-          // Combine current meal values with new ones from request body
-          let updatedMeal = {
-            ...results[0],
-            ...req.body,
-          };
-          // If updatedMeal.allergenes is an array, join it into a string
-          if (Array.isArray(updatedMeal.allergenes)) {
-            updatedMeal.allergenes = updatedMeal.allergenes.join(',');
-          }
-          const sql = `
-          UPDATE meal
-          SET name = ?, description = ?, isActive = ?, isVega = ?, isVegan = ?, isToTakeHome = ?, dateTime = ?, maxAmountOfParticipants = ?, price = ?, imageUrl = ?, allergenes = ?
-          WHERE id = ?
-        `;
-          const values = [
-            updatedMeal.name,
-            updatedMeal.description,
-            updatedMeal.isActive,
-            updatedMeal.isVega,
-            updatedMeal.isVegan,
-            updatedMeal.isToTakeHome,
-            updatedMeal.dateTime,
-            updatedMeal.maxAmountOfParticipants,
-            updatedMeal.price,
-            updatedMeal.imageUrl,
-            updatedMeal.allergenes,
-            mealId,
-          ];
-          logger.debug(
-            'Updating meal with allergenes:',
-            updatedMeal.allergenes
-          );
-          connection.query(sql, values, function (error, results, fields) {
-            if (error) {
-              logger.error('Database error:', error);
-              connection.release();
-              return res.status(500).json({
-                status: 500,
-                message: 'Database error',
-                data: {},
-              });
-            }
-
-            connection.query(
-              'SELECT * FROM meal WHERE id = ?',
-              [mealId],
-              function (error, results, fields) {
-                if (error) {
-                  logger.error('Database error:', error);
-                  connection.release();
-                  return res.status(500).json({
-                    status: 500,
-                    message: 'Database error',
-                    data: {},
-                  });
-                }
-
-                res.status(200).json({
-                  status: 200,
-                  message: `Meal successfully updated`,
-                  data: fun.convertMealProperties(results[0]),
-                });
-
-                connection.release();
-              }
-            );
-          });
-        }
-      );
-    });
-  },
   // getMealById
   getMealById: (req, res, next) => {
     const requestedMealId = req.params.mealId;
@@ -720,6 +725,7 @@ const mealController = {
           data: {},
         });
       }
+      logger.debug('Database connection established');
 
       connection.query(
         'SELECT * FROM meal WHERE id = ?;',
@@ -733,6 +739,7 @@ const mealController = {
               data: {},
             });
           }
+          logger.debug('Retrieved meal information');
 
           if (mealResults.length > 0) {
             const maxParticipants = mealResults[0].maxAmountOfParticipants;
@@ -749,6 +756,7 @@ const mealController = {
                     data: {},
                   });
                 }
+                logger.debug('Retrieved participant information');
 
                 if (participantResults.length < maxParticipants) {
                   connection.query(
@@ -763,6 +771,7 @@ const mealController = {
                           data: {},
                         });
                       }
+                      logger.debug('User registered for meal');
                       res.status(200).json({
                         status: 200,
                         message: `User met ID ${userId} is aangemeld voor maaltijd met ID ${mealId}`,
@@ -771,6 +780,7 @@ const mealController = {
                     }
                   );
                 } else {
+                  logger.debug('Maximum participants reached for meal');
                   res.status(403).json({
                     status: 403,
                     message:
@@ -781,6 +791,7 @@ const mealController = {
               }
             );
           } else {
+            logger.debug('No meal found with provided ID');
             res.status(404).json({
               status: 404,
               message: 'Meal not found',
@@ -791,6 +802,7 @@ const mealController = {
       );
     });
   },
+
   withdrawFromMeal: (req, res, next) => {
     let mealId = req.params.mealId;
     let userId = req.userId;
@@ -806,6 +818,7 @@ const mealController = {
           data: {},
         });
       }
+      logger.debug('Database connection established');
 
       connection.query(
         'SELECT * FROM meal WHERE id = ?;',
@@ -819,6 +832,7 @@ const mealController = {
               data: {},
             });
           }
+          logger.debug('Retrieved meal information');
 
           if (results.length > 0) {
             connection.query(
@@ -833,6 +847,7 @@ const mealController = {
                     data: {},
                   });
                 }
+                logger.debug('Retrieved participant information');
 
                 if (results.length > 0) {
                   connection.query(
@@ -847,6 +862,7 @@ const mealController = {
                           data: {},
                         });
                       }
+                      logger.debug('User withdrawn from meal');
                       res.status(200).json({
                         status: 200,
                         message: `User met ID ${userId} is afgemeld voor maaltijd met ID ${mealId}`,
@@ -855,6 +871,7 @@ const mealController = {
                     }
                   );
                 } else {
+                  logger.debug('No registration found for user');
                   res.status(404).json({
                     status: 404,
                     message: 'Registration does not exist',
@@ -864,6 +881,7 @@ const mealController = {
               }
             );
           } else {
+            logger.debug('No meal found with provided ID');
             res.status(404).json({
               status: 404,
               message: 'Meal not found',
@@ -874,6 +892,7 @@ const mealController = {
       );
     });
   },
+
   getParticipants: (req, res, next) => {
     let mealId = req.params.mealId;
     logger.info('Getting participants for meal with id: ', mealId);
