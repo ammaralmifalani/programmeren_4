@@ -705,6 +705,281 @@ const mealController = {
       }
     });
   },
+  participateInMeal: (req, res, next) => {
+    let mealId = req.params.mealId;
+    let userId = req.userId;
+    logger.info(
+      `User ${userId} is attempting to participate in meal with ID: ${mealId}`
+    );
+    dbconnection.getConnection(function (err, connection) {
+      if (err) {
+        logger.error('Database connection error:', err);
+        return res.status(500).json({
+          status: 500,
+          message: 'Database connection error',
+          data: {},
+        });
+      }
+
+      connection.query(
+        'SELECT * FROM meal WHERE id = ?;',
+        [mealId],
+        function (error, mealResults, fields) {
+          if (error) {
+            logger.error('Database query error:', error);
+            return res.status(500).json({
+              status: 500,
+              message: 'Database query error',
+              data: {},
+            });
+          }
+
+          if (mealResults.length > 0) {
+            const maxParticipants = mealResults[0].maxAmountOfParticipants;
+
+            connection.query(
+              'SELECT * FROM meal_participants_user WHERE mealId = ?;',
+              [mealId],
+              function (error, participantResults, fields) {
+                if (error) {
+                  logger.error('Database query error:', error);
+                  return res.status(500).json({
+                    status: 500,
+                    message: 'Database query error',
+                    data: {},
+                  });
+                }
+
+                if (participantResults.length < maxParticipants) {
+                  connection.query(
+                    'INSERT INTO meal_participants_user (userId, mealId) VALUES (?, ?);',
+                    [userId, mealId],
+                    function (error, insertResults, fields) {
+                      if (error) {
+                        logger.error('Database query error:', error);
+                        return res.status(500).json({
+                          status: 500,
+                          message: 'Database query error',
+                          data: {},
+                        });
+                      }
+                      res.status(200).json({
+                        status: 200,
+                        message: `User met ID ${userId} is aangemeld voor maaltijd met ID ${mealId}`,
+                        data: {},
+                      });
+                    }
+                  );
+                } else {
+                  res.status(403).json({
+                    status: 403,
+                    message:
+                      'Maximum aantal deelnemers voor deze maaltijd is bereikt',
+                    data: {},
+                  });
+                }
+              }
+            );
+          } else {
+            res.status(404).json({
+              status: 404,
+              message: 'Meal not found',
+              data: {},
+            });
+          }
+        }
+      );
+    });
+  },
+  withdrawFromMeal: (req, res, next) => {
+    let mealId = req.params.mealId;
+    let userId = req.userId;
+    logger.info(
+      `Attempting to withdraw user ${userId} from meal with ID: ${mealId}`
+    );
+    dbconnection.getConnection(function (err, connection) {
+      if (err) {
+        logger.error('Database connection error:', err);
+        return res.status(500).json({
+          status: 500,
+          message: 'Database connection error',
+          data: {},
+        });
+      }
+
+      connection.query(
+        'SELECT * FROM meal WHERE id = ?;',
+        [mealId],
+        function (error, results, fields) {
+          if (error) {
+            logger.error('Database query error:', error);
+            return res.status(500).json({
+              status: 500,
+              message: 'Database query error',
+              data: {},
+            });
+          }
+
+          if (results.length > 0) {
+            connection.query(
+              'SELECT * FROM meal_participants_user WHERE mealId = ?;',
+              [mealId],
+              function (error, results, fields) {
+                if (error) {
+                  logger.error('Database query error:', error);
+                  return res.status(500).json({
+                    status: 500,
+                    message: 'Database query error',
+                    data: {},
+                  });
+                }
+
+                if (results.length > 0) {
+                  connection.query(
+                    'DELETE FROM meal_participants_user WHERE userId = ? AND mealId = ?;',
+                    [userId, mealId],
+                    function (error, results, fields) {
+                      if (error) {
+                        logger.error('Database query error:', error);
+                        return res.status(500).json({
+                          status: 500,
+                          message: 'Database query error',
+                          data: {},
+                        });
+                      }
+                      res.status(200).json({
+                        status: 200,
+                        message: `User met ID ${userId} is afgemeld voor maaltijd met ID ${mealId}`,
+                        data: {},
+                      });
+                    }
+                  );
+                } else {
+                  res.status(404).json({
+                    status: 404,
+                    message: 'Registration does not exist',
+                    data: {},
+                  });
+                }
+              }
+            );
+          } else {
+            res.status(404).json({
+              status: 404,
+              message: 'Meal not found',
+              data: {},
+            });
+          }
+        }
+      );
+    });
+  },
+  getParticipants: (req, res, next) => {
+    let mealId = req.params.mealId;
+    logger.info('Getting participants for meal with id: ', mealId);
+    dbconnection.getConnection(function (err, connection) {
+      if (err) {
+        logger.error('Error connecting to the database: ', err);
+        return next(err);
+      }
+      connection.query(
+        'SELECT * FROM meal WHERE id = ?;',
+        [mealId],
+        function (error, results, fields) {
+          if (error) {
+            logger.error('Error executing query: ', error);
+            return next(error);
+          }
+
+          if (results.length > 0) {
+            connection.query(
+              'SELECT user.id, user.firstName, user.lastName, user.isActive, user.emailAdress, user.phoneNumber, user.roles, user.street, user.city FROM meal_participants_user ' +
+                'JOIN user ON meal_participants_user.userId = user.id ' +
+                'WHERE meal_participants_user.mealId = ?;',
+              [mealId],
+              function (error, results, fields) {
+                if (error) {
+                  logger.error('Error executing query: ', error);
+                  return next(error);
+                }
+                res.status(200).json({
+                  status: 200,
+                  message: `Participants for meal with ID ${mealId}`,
+                  data: results,
+                });
+              }
+            );
+          } else {
+            const error = {
+              status: 404,
+              message: 'Meal not found',
+              data: {},
+            };
+            next(error);
+          }
+        }
+      );
+    });
+  },
+  getParticipantById: (req, res, next) => {
+    let mealId = req.params.mealId;
+    let participantId = req.params.participantId;
+    logger.info(
+      `Getting details for participant with id: ${participantId} for meal with id: ${mealId}`
+    );
+    dbconnection.getConnection(function (err, connection) {
+      if (err) {
+        logger.error('Error connecting to the database: ', err);
+        return next(err);
+      }
+      connection.query(
+        'SELECT * FROM meal WHERE id = ?;',
+        [mealId],
+        function (error, results, fields) {
+          if (error) {
+            logger.error('Error executing query: ', error);
+            return next(error);
+          }
+
+          if (results.length > 0) {
+            connection.query(
+              'SELECT user.id, user.firstName, user.lastName, user.isActive, user.emailAdress, user.phoneNumber, user.roles, user.street, user.city FROM meal_participants_user ' +
+                'JOIN user ON meal_participants_user.userId = user.id ' +
+                'WHERE meal_participants_user.mealId = ? AND meal_participants_user.userId = ?;',
+              [mealId, participantId],
+              function (error, results, fields) {
+                if (error) {
+                  logger.error('Error executing query: ', error);
+                  return next(error);
+                }
+
+                if (results.length > 0) {
+                  res.status(200).json({
+                    status: 200,
+                    message: `Details for participant with ID ${participantId} for meal with ID ${mealId}`,
+                    data: results[0],
+                  });
+                } else {
+                  const error = {
+                    status: 404,
+                    message: 'Participant not found',
+                  };
+                  next(error);
+                }
+              }
+            );
+          } else {
+            const error = {
+              status: 404,
+              message: 'Meal not found',
+            };
+            next(error);
+          }
+        }
+      );
+    });
+  },
 };
+
 // Export the userController object, making its methods available for use in other modules
 module.exports = mealController;

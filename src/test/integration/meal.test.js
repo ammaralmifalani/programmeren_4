@@ -20,8 +20,6 @@ const CLEAR_PARTICIPANTS_TABLE = 'DELETE IGNORE FROM `meal_participants_user`;';
 const CLEAR_USERS_TABLE = 'DELETE IGNORE FROM `user`;';
 const CLEAR_DB =
   CLEAR_MEAL_TABLE + CLEAR_PARTICIPANTS_TABLE + CLEAR_USERS_TABLE;
-const emailAdress_test = 'j.doe@gmail.com';
-const password_test = 'Secret123';
 /**
  * Voeg een user toe aan de database. Deze user heeft id 1.
  * Deze id kun je als foreign key gebruiken in de andere queries, bv insert meal.
@@ -33,7 +31,11 @@ const INSERT_USER =
 const INSERT_MEALS =
   'INSERT INTO `meal` (`id`,`name`, `description`, `imageUrl`, `dateTime`, `maxAmountOfParticipants`, `price`, `cookId`) VALUES' +
   "(1,'Meal A', 'description', 'image url', NOW(), 5, 6.50, 1)," +
-  "(2,'Meal B', 'description', 'image url', NOW(), 5, 6.50, 1),(3,'Meal B', 'description', 'image url', NOW(), 5, 6.50, 2);";
+  "(2,'Meal B', 'description', 'image url', NOW(), 5, 6.50, 1),(3,'Meal B', 'description', 'image url', NOW(), 1, 6.50, 2);";
+const INSERT_PARTTICIPANT =
+  'INSERT INTO meal_participants_user (userId, mealId) VALUES' +
+  ' (1, 2),' +
+  ' (2, 3);';
 const mealTest = {
   name: 'Meal A',
   description: 'description',
@@ -60,7 +62,14 @@ describe('Meal API', () => {
           connection.query(INSERT_MEALS, function (error, results, fields) {
             connection.release();
             if (error) throw error;
-            done();
+            connection.query(
+              INSERT_PARTTICIPANT,
+              function (error, results, fields) {
+                connection.release();
+                if (error) throw error;
+                done();
+              }
+            );
           });
         }
       );
@@ -440,6 +449,161 @@ describe('Meal API', () => {
           res.body.should.be.an('object');
           message.should.be.a('string').eql('Maaltijd met ID 1 is verwijderd');
           res.body.should.have.property('data').to.be.empty;
+          done();
+        });
+    });
+  });
+  describe('UC-401 | Participate in a meal', () => {
+    it('TC-401-1 | Not logged in', (done) => {
+      chai
+        .request(app)
+        .post('/api/meal/1/participate')
+        .end((err, res) => {
+          let { status, message, data } = res.body;
+          status.should.eql(401);
+          res.body.should.be.an('object');
+          message.should.be.a('string').eql('Authorization header missing!');
+          res.body.should.have.property('data').to.be.empty;
+          done();
+        });
+    });
+
+    it('TC-401-2 | Meal does not exist', (done) => {
+      chai
+        .request(app)
+        .post('/api/meal/0/participate')
+        .set('Authorization', `Bearer ${token}`)
+        .end((err, res) => {
+          let { status, message, data } = res.body;
+          status.should.eql(404);
+          res.body.should.be.an('object');
+          message.should.be.a('string').eql('Meal not found');
+          res.body.should.have.property('data').to.be.empty;
+          done();
+        });
+    });
+
+    it('TC-401-3 | Successfully participated', (done) => {
+      chai
+        .request(app)
+        .post('/api/meal/1/participate')
+        .set('Authorization', `Bearer ${token}`)
+        .end((err, res) => {
+          let { status, message, data } = res.body;
+          status.should.eql(200);
+          message.should.be
+            .a('string')
+            .eql('User met ID 1 is aangemeld voor maaltijd met ID 1');
+          res.body.should.be.an('object');
+          res.body.should.have.property('data').to.be.empty;
+          done();
+        });
+    });
+    it('TC-401-4 | Maximum number of registrations has been reached', (done) => {
+      chai
+        .request(app)
+        .post('/api/meal/3/participate')
+        .set('Authorization', `Bearer ${token}`)
+        .end((err, res) => {
+          let { status, message, data } = res.body;
+          status.should.eql(403);
+          res.body.should.be.an('object');
+          message.should.be
+            .a('string')
+            .eql('Maximum aantal deelnemers voor deze maaltijd is bereikt');
+          res.body.should.have.property('data').to.be.empty;
+          done();
+        });
+    });
+  });
+  describe('UC-402 | Sign out for meal', () => {
+    it('TC-402-1 | Not logged in', (done) => {
+      chai
+        .request(app)
+        .delete('/api/meal/1/participate')
+        .end((err, res) => {
+          let { status, message } = res.body;
+          status.should.eql(401);
+          res.body.should.be.an('object');
+          message.should.be.a('string').eql('Authorization header missing!');
+          done();
+        });
+    });
+    it('TC-402-2 | Meal does not exist', (done) => {
+      chai
+        .request(app)
+        .delete('/api/meal/0/participate')
+        .set('Authorization', `Bearer ${token}`)
+        .end((err, res) => {
+          let { status, message, data } = res.body;
+          status.should.eql(404);
+          res.body.should.be.an('object');
+          message.should.be.a('string').eql('Meal not found');
+          res.body.should.have.property('data').to.be.empty;
+          done();
+        });
+    });
+    it('TC-402-3 | Registration does not exist', (done) => {
+      chai
+        .request(app)
+        .delete('/api/meal/1/participate')
+        .set('Authorization', `Bearer ${token}`)
+        .end((err, res) => {
+          let { status, message, data } = res.body;
+          status.should.eql(404);
+          message.should.be.a('string').eql('Registration does not exist');
+          res.body.should.be.an('object');
+          res.body.should.have.property('data').to.be.empty;
+          done();
+        });
+    });
+    it('TC-402-4 | Successfully signed out', (done) => {
+      chai
+        .request(app)
+        .delete('/api/meal/2/participate')
+        .set('Authorization', `Bearer ${token}`)
+        .end((err, res) => {
+          let { status, message, data } = res.body;
+          status.should.eql(200);
+          res.body.should.be.an('object');
+          message.should.be
+            .a('string')
+            .eql('User met ID 1 is afgemeld voor maaltijd met ID 2');
+          res.body.should.have.property('data').to.be.empty;
+          done();
+        });
+    });
+  });
+  describe('UC-403 | Overview of Participants', () => {
+    it('TC-403-1 | List of participants returned', (done) => {
+      chai
+        .request(app)
+        .get('/api/meal/2/participants')
+        .set('Authorization', `Bearer ${token}`)
+        .end((err, res) => {
+          let { status, message, data } = res.body;
+          status.should.eql(200);
+          res.body.should.be.an('object');
+          message.should.be.a('string').eql('Participants for meal with ID 2');
+          data.length.should.be.eql(1);
+          done();
+        });
+    });
+  });
+  describe('UC-404 | Retrieve details of a Participant', () => {
+    it('TC-404-1 | Returned details of a Participant', (done) => {
+      chai
+        .request(app)
+        .get('/api/meal/2/participants/1')
+        .set('Authorization', `Bearer ${token}`)
+        .end((err, res) => {
+          let { status, message, data } = res.body;
+          status.should.eql(200);
+          res.body.should.be.an('object');
+          message.should.be
+            .a('string')
+            .eql('Details for participant with ID 1 for meal with ID 2');
+          data.should.be.an('object');
           done();
         });
     });

@@ -9,7 +9,6 @@ mealRouter.post(
   mealController.validateMeal,
   mealController.createMeal
 );
-
 // UC-202: Retrieve all meals
 mealRouter.get('', mealController.getAllMeals);
 //
@@ -24,7 +23,6 @@ mealRouter.post(
   mealController.validateMeal,
   mealController.createMeal
 );
-
 mealRouter.put(
   '/:mealId',
   authController.validateToken,
@@ -32,4 +30,25 @@ mealRouter.put(
   mealController.updateMeal
 );
 mealRouter.get('/:mealId', mealController.getMealById);
+mealRouter.delete(
+  '/:mealId/participate',
+  authController.validateToken,
+  mealController.withdrawFromMeal
+);
+mealRouter.post(
+  '/:mealId/participate',
+  authController.validateToken,
+  mealController.participateInMeal
+);
+mealRouter.get(
+  '/:mealId/participants',
+  authController.validateToken,
+  mealController.getParticipants
+);
+mealRouter.get(
+  '/:mealId/participants/:participantId',
+  authController.validateToken,
+  mealController.getParticipantById
+);
+
 module.exports = mealRouter;
