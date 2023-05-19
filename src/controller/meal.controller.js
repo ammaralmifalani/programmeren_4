@@ -680,13 +680,18 @@ const mealController = {
         });
       }
       logger.debug('Database connection established');
-
+      logger.debug('About to run SELECT * FROM meal WHERE id = ? query');
       connection.query(
         'SELECT * FROM meal WHERE id = ?;',
         [mealId],
         function (error, results, fields) {
+          logger.debug(
+            'Finished running SELECT * FROM meal WHERE id = ? query'
+          );
+
           if (error) {
             logger.error('Database query error:', error);
+            connection.release();
             return res.status(500).json({
               status: 500,
               message: error.message,
@@ -702,6 +707,7 @@ const mealController = {
               function (error, results, fields) {
                 if (error) {
                   logger.error('Database query error:', error);
+                  connection.release();
                   return res.status(500).json({
                     status: 500,
                     message: error.message,
@@ -716,6 +722,7 @@ const mealController = {
                     [userId, mealId],
                     function (error, results, fields) {
                       if (error) {
+                        connection.release();
                         logger.error('Database query error:', error);
                         return res.status(500).json({
                           status: 500,
@@ -732,6 +739,7 @@ const mealController = {
                     }
                   );
                 } else {
+                  connection.release();
                   logger.debug('No registration found for user');
                   res.status(404).json({
                     status: 404,
@@ -742,6 +750,7 @@ const mealController = {
               }
             );
           } else {
+            connection.release();
             logger.debug('No meal found with provided ID');
             res.status(404).json({
               status: 404,
