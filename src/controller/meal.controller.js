@@ -810,6 +810,7 @@ const mealController = {
       `Attempting to withdraw user ${userId} from meal with ID: ${mealId}`
     );
     dbconnection.getConnection(function (err, connection) {
+      logger.debug('Entered getConnection method');
       if (err) {
         logger.error('Database connection error:', err);
         return res.status(500).json({
