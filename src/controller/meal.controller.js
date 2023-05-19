@@ -857,7 +857,7 @@ const mealController = {
                 } else {
                   res.status(404).json({
                     status: 404,
-                    message: 'aanmelding bestaat niet',
+                    message: 'Registration does not exist',
                     data: {},
                   });
                 }
