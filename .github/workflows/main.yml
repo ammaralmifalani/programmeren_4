@@ -3,7 +3,8 @@ name: Testing and deployment
 on:
   push:
     branches:
-      - main
+      # - main
+      - fix/code-repair
 
 jobs:
   integrationtests:
