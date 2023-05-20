@@ -345,9 +345,11 @@ const userController = {
   deleteUser: (req, res, next) => {
     let id = req.params.id;
     let userId = req.userId;
-    logger.info('Deleting user with id: ', id);
+    logger.info('Start deleteUser method');
+    logger.debug('Deleting user with id: ', id);
 
     dbconnection.getConnection(function (error, connection) {
+      logger.debug('Attempting to get database connection');
       if (error) {
         logger.error('Database connection error:', error);
         return res.status(500).json({
@@ -356,6 +358,8 @@ const userController = {
           data: {},
         });
       }
+      logger.debug('Database connection successful');
+      logger.debug('Attempting to select user with id: ', id);
 
       connection.query(
         'SELECT * FROM user WHERE id = ?',
@@ -369,9 +373,15 @@ const userController = {
               data: {},
             });
           }
-          logger.trace('User select results:', results);
+          logger.debug('User select results:', results);
           if (results.length > 0) {
+            logger.debug(
+              'User found, checking if logged in user is allowed to delete'
+            );
             if (userId == id) {
+              logger.debug(
+                'Logged in user is allowed to delete, proceeding to delete'
+              );
               connection.query(
                 `DELETE  FROM user WHERE id = ?`,
                 [id],
@@ -384,9 +394,11 @@ const userController = {
                       data: {},
                     });
                   }
+                  logger.debug('User delete query complete');
                   connection.release();
-                  logger.trace('User delete results:', results);
+                  logger.debug('Database connection released');
                   if (results.affectedRows > 0) {
+                    logger.info('User successfully deleted');
                     res.status(200).json({
                       status: 200,
                       message: 'User successfully deleted',
@@ -396,6 +408,8 @@ const userController = {
                 }
               );
             } else {
+              logger.error('Logged in user is not allowed to delete this user');
+              connection.release();
               const error = {
                 status: 403,
                 message: 'Logged in user is not allowed to delete this user.',
@@ -404,6 +418,8 @@ const userController = {
               next(error);
             }
           } else {
+            logger.error('User not found');
+            connection.release();
             const error = {
               status: 400,
               message: 'User not found',
@@ -415,6 +431,7 @@ const userController = {
       );
     });
   },
+
   // updateUser updates a user's information in the database
   updateUser: (req, res, next) => {
     let id = req.params.id;
