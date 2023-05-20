@@ -101,57 +101,72 @@ const mealController = {
           }
           if (results) {
             logger.info('Found', results.length, 'results');
-            let meals = [];
+
+            let meals = {};
+
             results.forEach((result) => {
-              let meal = fun.convertMealProperties({
-                id: result.id,
-                name: result.name,
-                description: result.description,
-                isActive: result.isActive,
-                isVega: result.isVega,
-                isVegan: result.isVegan,
-                isToTakeHome: result.isToTakeHome,
-                dateTime: result.dateTime,
-                createDate: result.createDate,
-                updateDate: result.updateDate,
-                maxAmountOfParticipants: result.maxAmountOfParticipants,
-                price: result.price,
-                imageUrl: result.imageUrl,
-                allergenes: result.allergenes,
-                cook: fun.convertIsActiveToBoolean({
-                  id: result.cookId,
-                  firstName: result.cookFirstName,
-                  lastName: result.cookLastName,
-                  isActive: result.cookIsActive,
-                  emailAdress: result.cookEmailAdress,
-                  phoneNumber: result.cookPhoneNumber,
-                  roles: result.cookRoles,
-                  street: result.cookStreet,
-                  city: result.cookCity,
-                }),
-                participants: result.participantId
-                  ? [
-                      fun.convertIsActiveToBoolean({
-                        id: result.participantId,
-                        firstName: result.participantFirstName,
-                        lastName: result.participantLastName,
-                        isActive: result.participantIsActive,
-                        emailAdress: result.participantEmailAdress,
-                        phoneNumber: result.participantPhoneNumber,
-                        roles: result.participantRoles,
-                        street: result.participantStreet,
-                        city: result.participantCity,
-                      }),
-                    ]
-                  : [],
-              });
-              meals.push(meal);
+              // Eerst, controleer of het meal al bestaat in de lijst
+              let meal = meals[result.id];
+
+              // Als het meal nog niet bestaat, maak het aan en voeg het toe aan de lijst
+              if (!meal) {
+                meal = fun.convertMealProperties({
+                  id: result.id,
+                  name: result.name,
+                  description: result.description,
+                  isActive: result.isActive,
+                  isVega: result.isVega,
+                  isVegan: result.isVegan,
+                  isToTakeHome: result.isToTakeHome,
+                  dateTime: result.dateTime,
+                  createDate: result.createDate,
+                  updateDate: result.updateDate,
+                  maxAmountOfParticipants: result.maxAmountOfParticipants,
+                  price: result.price,
+                  imageUrl: result.imageUrl,
+                  allergenes: result.allergenes,
+                  cook: fun.convertIsActiveToBoolean({
+                    id: result.cookId,
+                    firstName: result.cookFirstName,
+                    lastName: result.cookLastName,
+                    isActive: result.cookIsActive,
+                    emailAdress: result.cookEmailAdress,
+                    phoneNumber: result.cookPhoneNumber,
+                    roles: result.cookRoles,
+                    street: result.cookStreet,
+                    city: result.cookCity,
+                  }),
+                  participants: [],
+                });
+
+                meals[meal.id] = meal;
+              }
+
+              // Voeg de participant toe aan de participantenlijst van het meal
+              if (result.participantId) {
+                meal.participants.push(
+                  fun.convertIsActiveToBoolean({
+                    id: result.participantId,
+                    firstName: result.participantFirstName,
+                    lastName: result.participantLastName,
+                    isActive: result.participantIsActive,
+                    emailAdress: result.participantEmailAdress,
+                    phoneNumber: result.participantPhoneNumber,
+                    roles: result.participantRoles,
+                    street: result.participantStreet,
+                    city: result.participantCity,
+                  })
+                );
+              }
             });
+
+            // Convert het meals object naar een array voor de response
+            const mealsArray = Object.values(meals);
 
             res.status(200).json({
               status: 200,
               message: 'Meal getAll endpoint',
-              data: meals,
+              data: mealsArray,
             });
           }
         });
