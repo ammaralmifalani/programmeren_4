@@ -401,7 +401,7 @@ const userController = {
                     logger.info('User successfully deleted');
                     res.status(200).json({
                       status: 200,
-                      message: 'User successfully deleted',
+                      message: `Gebruiker met ID ${userId} is verwijderd`,
                       data: {},
                     });
                   }
@@ -421,7 +421,7 @@ const userController = {
             logger.error('User not found');
             connection.release();
             const error = {
-              status: 400,
+              status: 404,
               message: 'User not found',
               data: {},
             };

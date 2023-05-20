@@ -635,7 +635,7 @@ describe('User API', () => {
         .end((err, res) => {
           res.body.should.be.an('object');
           let { status, message, data } = res.body;
-          status.should.eql(400);
+          status.should.eql(404);
           message.should.be.a('string').eql('User not found');
           Object.keys(data).length.should.be.equal(0);
           done();
@@ -682,7 +682,7 @@ describe('User API', () => {
           res.body.should.be.an('object');
           let { status, message, data } = res.body;
           status.should.eql(200);
-          message.should.be.a('string').eql('User successfully deleted');
+          message.should.be.a('string').eql('Gebruiker met ID 1 is verwijderd');
           Object.keys(data).length.should.be.equal(0);
           logger.trace('Calling done()');
           done();
