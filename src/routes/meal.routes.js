@@ -30,11 +30,11 @@ mealRouter.put(
   mealController.updateMeal
 );
 mealRouter.get('/:mealId', mealController.getMealById);
-// mealRouter.delete(
-//   '/:mealId/participate',
-//   authController.validateToken,
-//   mealController.withdrawFromMeal
-// );
+mealRouter.delete(
+  '/:mealId/participate',
+  authController.validateToken,
+  mealController.withdrawFromMeal
+);
 mealRouter.post(
   '/:mealId/participate',
   authController.validateToken,
