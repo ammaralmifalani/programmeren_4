@@ -3,8 +3,7 @@ name: Testing and deployment
 on:
   push:
     branches:
-      # - main
-      - feature-participant
+      - main
 
 jobs:
   integrationtests:

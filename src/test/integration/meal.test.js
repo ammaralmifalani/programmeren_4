@@ -495,7 +495,6 @@ describe('Meal API', () => {
             .a('string')
             .eql('User met ID 1 is aangemeld voor maaltijd met ID 1');
           res.body.should.be.an('object');
-          // res.body.should.have.property('data').to.be.empty;
           res.body.should.have.property('data').that.is.not.empty;
           done();
         });
@@ -571,7 +570,6 @@ describe('Meal API', () => {
           message.should.be
             .a('string')
             .eql('User met ID 1 is afgemeld voor maaltijd met ID 2');
-          // res.body.should.have.property('data').to.be.empty;
           res.body.should.have.property('data').that.is.not.empty;
 
           done();
