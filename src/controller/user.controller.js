@@ -239,6 +239,7 @@ const userController = {
                 message: 'User successfully registered.',
                 data: fun.convertIsActiveToBoolean(fetchResults[0]), // assuming the query returns an array
               });
+              connection.release();
             }
           );
         }
@@ -366,6 +367,7 @@ const userController = {
         [id],
         function (error, results, fields) {
           if (error) {
+            connection.release();
             logger.error('Database query error:', error);
             return res.status(500).json({
               status: 500,
@@ -387,6 +389,7 @@ const userController = {
                 [id],
                 function (error, results, fields) {
                   if (error) {
+                    connection.release();
                     logger.error('Database query error:', error);
                     return res.status(500).json({
                       status: 500,
@@ -395,7 +398,6 @@ const userController = {
                     });
                   }
                   logger.debug('User delete query complete');
-                  connection.release();
                   logger.debug('Database connection released');
                   if (results.affectedRows > 0) {
                     logger.info('User successfully deleted');
