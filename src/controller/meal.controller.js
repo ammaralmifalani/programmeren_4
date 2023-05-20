@@ -681,7 +681,10 @@ const mealController = {
                       res.status(200).json({
                         status: 200,
                         message: `User met ID ${userId} is aangemeld voor maaltijd met ID ${mealId}`,
-                        data: {},
+                        data: {
+                          userId: userId,
+                          mealId: mealId,
+                        },
                       });
                     }
                   );
@@ -781,7 +784,10 @@ const mealController = {
                       res.status(200).json({
                         status: 200,
                         message: `User met ID ${userId} is afgemeld voor maaltijd met ID ${mealId}`,
-                        data: {},
+                        data: {
+                          userId: userId,
+                          mealId: mealId,
+                        },
                       });
                     }
                   );
