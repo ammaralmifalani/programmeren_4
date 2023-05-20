@@ -256,7 +256,6 @@ const mealController = {
       }
     });
   },
-
   // deleteMeal deletes a meal from the database
   deleteMeal: (req, res, next) => {
     const mealId = req.params.mealId;
@@ -343,7 +342,6 @@ const mealController = {
       );
     });
   },
-
   updateMeal: (req, res, next) => {
     let mealId = req.params.mealId;
     let userId = req.userId;
@@ -369,6 +367,7 @@ const mealController = {
         function (error, results, fields) {
           if (error) {
             logger.error('Database query error:', error);
+            connection.release();
             return res.status(500).json({
               status: 500,
               message: error.message,
@@ -376,18 +375,22 @@ const mealController = {
             });
           }
           logger.debug('Retrieved meal information');
+
           // Check if meal exists
           if (results.length === 0) {
             logger.debug('Meal not found');
+            connection.release();
             return res.status(404).json({
               status: 404,
               message: 'Meal not found',
               data: {},
             });
           }
+
           // Check if user is updating their own meal
           if (results[0].cookId != userId) {
             logger.debug('User is not the creator of the meal');
+            connection.release();
             return res.status(403).json({
               status: 403,
               message: 'You can only update your own meals',
@@ -400,15 +403,17 @@ const mealController = {
             ...results[0],
             ...req.body,
           };
+
           // If updatedMeal.allergenes is an array, join it into a string
           if (Array.isArray(updatedMeal.allergenes)) {
             updatedMeal.allergenes = updatedMeal.allergenes.join(',');
           }
+
           const sql = `
-          UPDATE meal
-          SET name = ?, description = ?, isActive = ?, isVega = ?, isVegan = ?, isToTakeHome = ?, dateTime = ?, maxAmountOfParticipants = ?, price = ?, imageUrl = ?, allergenes = ?
-          WHERE id = ?
-        `;
+            UPDATE meal
+            SET name = ?, description = ?, isActive = ?, isVega = ?, isVegan = ?, isToTakeHome = ?, dateTime = ?, maxAmountOfParticipants = ?, price = ?, imageUrl = ?, allergenes = ?
+            WHERE id = ?
+          `;
           const values = [
             updatedMeal.name,
             updatedMeal.description,
@@ -427,15 +432,18 @@ const mealController = {
             'Updating meal with allergenes:',
             updatedMeal.allergenes
           );
+
           connection.query(sql, values, function (error, results, fields) {
             if (error) {
               logger.error('Database query error:', error);
+              connection.release();
               return res.status(500).json({
                 status: 500,
                 message: error.message,
                 data: {},
               });
             }
+
             logger.debug('Meal updated in the database');
 
             connection.query(
@@ -444,12 +452,14 @@ const mealController = {
               function (error, results, fields) {
                 if (error) {
                   logger.error('Database query error:', error);
+                  connection.release();
                   return res.status(500).json({
                     status: 500,
                     message: error.message,
                     data: {},
                   });
                 }
+
                 logger.debug('Retrieved updated meal information');
 
                 res.status(200).json({
@@ -459,6 +469,7 @@ const mealController = {
                 });
 
                 connection.release();
+                logger.debug('Database connection released');
               }
             );
           });
@@ -684,7 +695,6 @@ const mealController = {
       );
     });
   },
-
   withdrawFromMeal: (req, res, next) => {
     let mealId = req.params.mealId;
     let userId = req.userId;
@@ -784,7 +794,6 @@ const mealController = {
       );
     });
   },
-
   getParticipants: (req, res, next) => {
     let mealId = req.params.mealId;
     logger.info('Getting participants for meal with id: ', mealId);
