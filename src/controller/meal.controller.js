@@ -161,7 +161,7 @@ const mealController = {
   },
   // CreateUser creates a new user and adds it to the database
   createMeal: (req, res, next) => {
-    logger.trace('Create a new Meal');
+    logger.info('Create a new Meal');
     const meal = req.body;
     const userId = req.userId;
     logger.debug('meal: ' + JSON.stringify(meal));
@@ -171,18 +171,19 @@ const mealController = {
         /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(\.\d{6})?$/;
       return mysqlDateTimeFormat.test(dateTime);
     }
-    logger.debug('Meal.dateTime', meal.dateTime);
+
     if (!isMySQLDateTimeFormat(meal.dateTime)) {
       let date = new Date(meal.dateTime);
       meal.dateTime = date.toISOString().slice(0, 19).replace('T', ' ');
     }
-    logger.debug('Meal.dateTime', meal.dateTime);
+    logger.debug('Formatted Meal.dateTime: ', meal.dateTime);
 
     let sqlInsertStatement =
       'INSERT INTO `meal` ( `name`, `description`, `imageUrl`, `dateTime`, `maxAmountOfParticipants`, `price`, `cookId`) VALUES' +
       '(?,?,?,?,?,?,?)';
 
     dbconnection.getConnection(function (err, connection) {
+      logger.debug('Entered getConnection method');
       if (err) {
         logger.error('Database connection error:', err);
         return res.status(500).json({
@@ -191,7 +192,9 @@ const mealController = {
           data: {},
         });
       }
+
       if (connection) {
+        logger.debug('Database connection established');
         try {
           connection.query(
             sqlInsertStatement,
@@ -213,9 +216,10 @@ const mealController = {
                   data: {},
                 });
               }
+
               if (result) {
                 const id = result.insertId;
-                logger.trace('Meal successfully Added, id = ' + id);
+                logger.info('Meal successfully Added, id = ' + id);
 
                 // SQL statement to select the just inserted meal
                 let sqlSelectStatement = 'SELECT * FROM `meal` WHERE `id` = ?';
@@ -232,8 +236,8 @@ const mealController = {
                       });
                     }
 
-                    connection.release();
                     if (result && result.length > 0) {
+                      logger.info('Meal successfully retrieved after addition');
                       res.status(201).json({
                         status: 201,
                         message: 'Meal successfully added.',
@@ -246,19 +250,25 @@ const mealController = {
             }
           );
         } finally {
+          logger.debug('Releasing database connection');
           dbconnection.releaseConnection(connection);
         }
       }
     });
   },
+
   // deleteMeal deletes a meal from the database
   deleteMeal: (req, res, next) => {
     const mealId = req.params.mealId;
     const userId = req.userId;
+
+    logger.info(
+      `Attempting to delete meal with ID: ${mealId} by user ID: ${userId}`
+    );
     logger.debug(`Request Method: ${req.method}`);
-    logger.debug('Deleting meal with id: ', mealId);
 
     dbconnection.getConnection(function (err, connection) {
+      logger.debug('Entered getConnection method');
       if (err) {
         logger.error('Database connection error:', err);
         return res.status(500).json({
@@ -267,13 +277,16 @@ const mealController = {
           data: {},
         });
       }
+      logger.debug('Database connection established');
 
       connection.query(
         'SELECT * FROM `meal` WHERE id = ?',
         [mealId],
         function (err, results) {
+          logger.debug('Retrieved meal information');
           if (err) {
             logger.error('Database query error:', err);
+            connection.release();
             return res.status(500).json({
               status: 500,
               message: err.message,
@@ -282,8 +295,9 @@ const mealController = {
           }
 
           if (results.length > 0) {
+            logger.debug('Meal found');
             if (results[0].cookId !== userId) {
-              connection.release();
+              logger.debug('User not authorized to delete this meal');
               next({
                 status: 403,
                 message: 'Not authorized to delete this meal',
@@ -296,17 +310,18 @@ const mealController = {
               'DELETE FROM meal WHERE id = ? AND cookId = ?',
               [mealId, userId],
               function (err, results) {
+                logger.debug('Attempted to delete meal');
                 if (err) {
                   logger.error('Database query error:', err);
+                  connection.release();
                   return res.status(500).json({
                     status: 500,
                     message: err.message,
                     data: {},
                   });
                 }
-                connection.release();
-
                 if (results.affectedRows > 0) {
+                  logger.debug('Meal deleted successfully');
                   res.status(200).json({
                     status: 200,
                     message: `Maaltijd met ID ${mealId} is verwijderd`,
@@ -316,6 +331,7 @@ const mealController = {
               }
             );
           } else {
+            logger.debug('Meal not found');
             connection.release();
             next({
               status: 404,
@@ -327,6 +343,7 @@ const mealController = {
       );
     });
   },
+
   updateMeal: (req, res, next) => {
     let mealId = req.params.mealId;
     let userId = req.userId;
