@@ -67,21 +67,7 @@ const mealController = {
       }
     }
 
-    // Controleer of de waarde van allergenes binnen de toegestane set valt
-    if (meal['allergenes'] !== undefined) {
-      let allergenes = meal['allergenes'].split(',');
-      for (let allergene of allergenes) {
-        if (!allergenesOptions.includes(allergene)) {
-          return next({
-            status: 400,
-            message: `optional meal field allergenes must be one of ${allergenesOptions.join(
-              ', '
-            )}`,
-            data: {},
-          });
-        }
-      }
-    }
+ 
 
     next();
   },
