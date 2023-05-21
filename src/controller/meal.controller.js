@@ -15,8 +15,6 @@ const mealController = {
       'imageUrl',
       'dateTime',
     ];
-    const optionalFields = ['isActive', 'isVega', 'isVegan', 'isToTakeHome'];
-    const allergenesOptions = ['gluten', 'lactose', 'noten', '']; // Toegestane allergenes
     const fieldTypes = {
       name: 'string',
       description: 'string',
@@ -24,10 +22,6 @@ const mealController = {
       maxAmountOfParticipants: 'number',
       imageUrl: 'string',
       dateTime: 'string',
-      isActive: 'boolean',
-      isVega: 'boolean',
-      isVegan: 'boolean',
-      isToTakeHome: 'boolean',
     };
 
     for (let field of requiredFields) {
@@ -53,22 +47,6 @@ const mealController = {
         });
       }
     }
-
-    for (let field of optionalFields) {
-      if (
-        meal[field] !== undefined &&
-        typeof meal[field] !== fieldTypes[field]
-      ) {
-        return next({
-          status: 400,
-          message: `optional meal field ${field} must be a ${fieldTypes[field]}`,
-          data: {},
-        });
-      }
-    }
-
- 
-
     next();
   },
   // getAllMeals retrieves all users from the database
@@ -213,20 +191,11 @@ const mealController = {
       let date = new Date(meal.dateTime);
       meal.dateTime = date.toISOString().slice(0, 19).replace('T', ' ');
     }
-
-    // Stel standaardwaarden in voor optionele velden
-    meal.isActive = meal.isActive !== undefined ? meal.isActive : false;
-    meal.isVega = meal.isVega !== undefined ? meal.isVega : false;
-    meal.isVegan = meal.isVegan !== undefined ? meal.isVegan : false;
-    meal.isToTakeHome =
-      meal.isToTakeHome !== undefined ? meal.isToTakeHome : true;
-    meal.allergenes = meal.allergenes !== undefined ? meal.allergenes : '';
-
     logger.debug('Formatted Meal.dateTime: ', meal.dateTime);
 
     let sqlInsertStatement =
-      'INSERT INTO `meal` ( `name`, `description`, `imageUrl`, `dateTime`, `maxAmountOfParticipants`, `price`,`isActive`,`isVega`,`isVegan`,`isToTakeHome`,`allergenes`, `cookId`) VALUES' +
-      '(?,?,?,?,?,?,?,?,?,?,?,?)';
+      'INSERT INTO `meal` ( `name`, `description`, `imageUrl`, `dateTime`, `maxAmountOfParticipants`, `price`, `cookId`) VALUES' +
+      '(?,?,?,?,?,?,?)';
 
     dbconnection.getConnection(function (err, connection) {
       logger.debug('Entered getConnection method');
@@ -251,11 +220,6 @@ const mealController = {
               meal.dateTime,
               meal.maxAmountOfParticipants,
               meal.price,
-              meal.isActive,
-              meal.isVega,
-              meal.isVegan,
-              meal.isToTakeHome,
-              meal.allergenes,
               userId,
             ],
             (err, result, fields) => {
