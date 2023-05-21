@@ -11,16 +11,62 @@ Voor telefoonnummer:
 
 
 */
+const bcrypt = require('bcrypt');
+const VALID_FIELDS = [
+  'id',
+  'firstName',
+  'lastName',
+  'emailAdress',
+  'phoneNumber',
+  'city',
+  'street',
+  'isActive',
+  'roles',
+];
+function buildSqlStatement(queryField) {
+  let sqlStatement =
+    'SELECT id, firstName, lastName, emailAdress, password, phoneNumber, city, street, isActive, roles FROM `user`';
+  let params = [];
+  let conditions = [];
+  let invalidFieldName = null;
+
+  for (let field in queryField) {
+    let value = queryField[field];
+
+    if (!VALID_FIELDS.includes(field)) {
+      invalidFieldName = field;
+      break;
+    }
+
+    if (!value) continue;
+
+    if (value.toLowerCase() === 'true') {
+      value = 1;
+    } else if (value.toLowerCase() === 'false') {
+      value = 0;
+    }
+
+    conditions.push(`\`${field}\` = ?`);
+    params.push(value);
+  }
+
+  if (invalidFieldName) {
+    return { error: `Invalid field in filter: ${invalidFieldName}.` };
+  }
+
+  if (conditions.length > 0) {
+    sqlStatement += ' WHERE ' + conditions.slice(0, 2).join(' AND ');
+  }
+
+  return { sqlStatement, params };
+}
 function validateEmail(email) {
-  // const regex = /^[\w-]+(\.[\w-]+)*@([\w-]+\.)+[a-zA-Z]{2,7}$/;
   const regex = /^[a-z]{1,1}\.[a-z]{2,}@[a-z]{2,}\.[a-z]{2,3}$/i;
 
   return regex.test(email);
 }
 // Validates the password using a regular expression
 function validatePassword(password) {
-  // const regex =
-  //   /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&*()_+[\]{};':"\\|,.<>/?]).{8,}$/;
   const regex = /^(?=.*\d)(?=.*[A-Z]).{8,}$/;
   return regex.test(password);
 }
@@ -29,7 +75,6 @@ function validatePhoneNumber(phoneNumber) {
   if (!phoneNumber) {
     return true; // Empty phone numbers are allowed
   }
-  // const regex = /^\d{10}$/;
   const regex = /^06[-\s]?\d{8}$/;
   return regex.test(phoneNumber);
 }
@@ -57,6 +102,11 @@ function convertMealProperties(meal) {
     price: parseFloat(meal.price),
   };
 }
+// Hashing function
+function hashPassword(password, callback) {
+  const saltRounds = 10;
+  bcrypt.hash(password, saltRounds, callback);
+}
 
 function getRandomEmail() {
   const randomString = Math.random().toString(36).substring(2, 7); // Genereert een willekeurige tekenreeks van 5 karakters
@@ -70,4 +120,6 @@ module.exports = {
   getRandomEmail: getRandomEmail,
   convertIsActiveToBoolean: convertIsActiveToBoolean,
   convertMealProperties: convertMealProperties,
+  buildSqlStatement: buildSqlStatement,
+  hashPassword: hashPassword,
 };

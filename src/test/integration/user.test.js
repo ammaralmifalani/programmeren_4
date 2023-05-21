@@ -6,6 +6,7 @@ const dbconnection = require('../../database/dbconnection');
 const { getTableLength } = require('../../controller/user.controller');
 const logger = require('../utils/utils').logger;
 require('tracer').setLevel('debug');
+const bcrypt = require('bcrypt');
 chai.should();
 chai.use(chaiHttp);
 let token = '';
@@ -27,15 +28,22 @@ const password_test = 'Secret123';
  * Voeg een user toe aan de database. Deze user heeft id 1.
  * Deze id kun je als foreign key gebruiken in de andere queries, bv insert meal.
  */
-const INSERT_USER =
-  'INSERT INTO `user` (`id`, `firstName`, `lastName`, `emailAdress`, `password`, `street`, `city` ) VALUES' +
-  '(1, "John", "Doe", "j.doe@gmail.com", "Secret123", "street", "city"),' +
-  '(2, "Mo", "Doe", "M.doe@gmail.com", "Secret123", "street", "city");';
+let INSERT_USER = '';
+
 const INSERT_MEALS =
   'INSERT INTO `meal` (`id`, `name`, `description`, `imageUrl`, `dateTime`, `maxAmountOfParticipants`, `price`, `cookId`) VALUES' +
   "(1, 'Meal A', 'description', 'image url', NOW(), 5, 6.50, 1)," +
   "(2, 'Meal B', 'description', 'image url', NOW(), 5, 6.50, 1);";
-
+bcrypt.hash('Secret123', 10, function (err, hash) {
+  INSERT_USER =
+    'INSERT INTO `user` (`id`, `firstName`, `lastName`, `emailAdress`, `password`, `street`, `city` ) VALUES' +
+    '(1, "John", "Doe", "j.doe@gmail.com", "' +
+    hash +
+    '", "street", "city"),' +
+    '(2, "Mo", "Doe", "M.doe@gmail.com", "' +
+    hash +
+    '", "street", "city");';
+});
 describe('User API', () => {
   logger.trace('User API');
   beforeEach((done) => {

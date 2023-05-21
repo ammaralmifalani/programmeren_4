@@ -235,7 +235,7 @@ describe('Meal API', () => {
         dateTime: '2022-04-26 12:33:51.000000',
         imageUrl:
           'https://miljuschka.nl/wp-content/uploads/2021/02/Pasta-bolognese-3-2.jpg',
-        allergenes: 'gluten,lactose',
+        allergenes:'gluten,lactose',
         maxAmountOfParticipants: 4,
         price: 12.75,
       };
