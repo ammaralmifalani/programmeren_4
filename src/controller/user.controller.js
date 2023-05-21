@@ -1,6 +1,7 @@
 const fun = require('./function');
 const dbconnection = require('../database/dbconnection');
 const logger = require('../test/utils/utils').logger;
+const bcrypt = require('bcrypt');
 const VALID_FIELDS = [
   'id',
   'firstName',
@@ -164,7 +165,18 @@ const userController = {
       city,
     } = req.body);
     logger.debug('user = ', newUser);
-
+    const saltRounds = 10;
+    bcrypt.hash(newUser.password, saltRounds, function (err, hash) {
+      if (err) {
+        logger.error('Bcrypt hashing error:', err);
+        return res.status(500).json({
+          status: 500,
+          message: err.message,
+          data: {},
+        });
+      }
+      newUser.password = hash; // Update password with hashed password
+    });
     dbconnection.getConnection(function (err, connection) {
       if (err) {
         logger.error('Database connection error:', err);
