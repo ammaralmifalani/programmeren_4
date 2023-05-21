@@ -220,7 +220,11 @@ const mealController = {
     meal.allergenes = meal.allergenes !== undefined ? meal.allergenes : '';
 
     logger.debug('Formatted Meal.dateTime: ', meal.dateTime);
-
+    logger.debug('UpdatedMeal.allergenes', meal.allergenes);
+    // If updatedMeal.allergenes is an array, join it into a string
+    if (Array.isArray(meal.allergenes)) {
+      meal.allergenes = meal.allergenes.join(',');
+    }
     let sqlInsertStatement =
       'INSERT INTO `meal` ( `name`, `description`, `imageUrl`, `dateTime`, `maxAmountOfParticipants`, `price`,`isActive`,`isVega`,`isVegan`,`isToTakeHome`,`allergenes`, `cookId`) VALUES' +
       '(?,?,?,?,?,?,?,?,?,?,?,?)';
