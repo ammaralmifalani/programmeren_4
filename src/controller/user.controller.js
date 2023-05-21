@@ -451,7 +451,8 @@ const userController = {
     let id = req.params.id;
     let userId = req.userId;
     const userToUpdate = req.body;
-    fun.hashPassword(password, function (err, hash) {
+    logger.debug('userPasswordToUpdate: ', userToUpdate.password);
+    fun.hashPassword(userToUpdate.password, function (err, hash) {
       if (err) {
         logger.error('Bcrypt hashing error:', err);
         return res.status(500).json({
@@ -461,6 +462,7 @@ const userController = {
         });
       }
       userToUpdate.password = hash;
+      logger.debug('userPasswordToUpdateHash: ', userToUpdate.password);
       dbconnection.getConnection(function (err, connection) {
         if (err) {
           logger.error('Database connection error:', err);
