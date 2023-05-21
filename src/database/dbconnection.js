@@ -10,7 +10,7 @@ const pool = mysql.createPool({
   multipleStatements: true,
   waitForConnections: true,
   connectionLimit: 10,
-  maxIdle: 10, // max idle connections, the default value is the same as `connectionLimit`
+  maxIdle: 20, // max idle connections, the default value is the same as `connectionLimit`
   idleTimeout: 100000, // idle connections timeout, in milliseconds, the default value 60000
   queueLimit: 0,
 });
