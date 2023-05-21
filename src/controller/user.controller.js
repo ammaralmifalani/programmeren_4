@@ -165,8 +165,8 @@ const userController = {
       city,
     } = req.body);
     logger.debug('user = ', newUser);
-    const saltRounds = 10;
-    bcrypt.hash(newUser.password, saltRounds, function (err, hash) {
+
+    fun.hashPassword(newUser.password, function (err, hash) {
       if (err) {
         logger.error('Bcrypt hashing error:', err);
         return res.status(500).json({
@@ -175,86 +175,86 @@ const userController = {
           data: {},
         });
       }
-      newUser.password = hash; // Update password with hashed password
-    });
-    dbconnection.getConnection(function (err, connection) {
-      if (err) {
-        logger.error('Database connection error:', err);
-        return res.status(500).json({
-          status: 500,
-          message: err.message,
-          data: {},
-        });
-      }
+      newUser.password = hash;
+      dbconnection.getConnection(function (err, connection) {
+        if (err) {
+          logger.error('Database connection error:', err);
+          return res.status(500).json({
+            status: 500,
+            message: err.message,
+            data: {},
+          });
+        }
 
-      // Use the connection
-      const sql = `
+        // Use the connection
+        const sql = `
         INSERT INTO user (
           firstName, lastName, emailAdress, password,
           phoneNumber, street, city
         ) VALUES ( ?, ?, ?, ?, ?, ?, ?)
       `;
-      const values = [
-        newUser.firstName,
-        newUser.lastName,
-        newUser.emailAdress,
-        newUser.password,
-        newUser.phoneNumber || '',
-        newUser.street,
-        newUser.city,
-      ];
-      connection.query(sql, values, function (error, results, fields) {
-        // When done with the connection, release it.
-        if (error) {
-          if (error.code === 'ER_DUP_ENTRY') {
-            // Send a custom error message to the user
-            res.status(403).json({
-              status: 403,
-              message: 'A user already exists with this email address.',
-              data: {},
-            });
-          } else {
-            // Send the original error message if it is another error
-            logger.info('#affectedRows= ', results.affectedRows);
-            logger.error('Database query error:', err);
-            return res.status(500).json({
-              status: 500,
-              message: err.message,
-              data: {},
-            });
-          }
-        } else {
-          let user_id = results.insertId;
-
-          // New SQL query to fetch the user data from the database
-          const fetchSql = 'SELECT * FROM user WHERE id = ?';
-          connection.query(
-            fetchSql,
-            [user_id],
-            function (fetchError, fetchResults, fetchFields) {
-              // Release the connection
-              connection.release();
-
-              // Handle error after the release
-              if (fetchError) {
-                logger.error('Database query error:', fetchError);
-                return res.status(500).json({
-                  status: 500,
-                  message: fetchError.message,
-                  data: {},
-                });
-              }
-
-              // Send the fetched user data to the client
-              res.status(201).json({
-                status: 201,
-                message: 'User successfully registered.',
-                data: fun.convertIsActiveToBoolean(fetchResults[0]), // assuming the query returns an array
+        const values = [
+          newUser.firstName,
+          newUser.lastName,
+          newUser.emailAdress,
+          newUser.password,
+          newUser.phoneNumber || '',
+          newUser.street,
+          newUser.city,
+        ];
+        connection.query(sql, values, function (error, results, fields) {
+          // When done with the connection, release it.
+          if (error) {
+            if (error.code === 'ER_DUP_ENTRY') {
+              // Send a custom error message to the user
+              res.status(403).json({
+                status: 403,
+                message: 'A user already exists with this email address.',
+                data: {},
               });
-              connection.release();
+            } else {
+              // Send the original error message if it is another error
+              logger.info('#affectedRows= ', results.affectedRows);
+              logger.error('Database query error:', err);
+              return res.status(500).json({
+                status: 500,
+                message: err.message,
+                data: {},
+              });
             }
-          );
-        }
+          } else {
+            let user_id = results.insertId;
+
+            // New SQL query to fetch the user data from the database
+            const fetchSql = 'SELECT * FROM user WHERE id = ?';
+            connection.query(
+              fetchSql,
+              [user_id],
+              function (fetchError, fetchResults, fetchFields) {
+                // Release the connection
+                connection.release();
+
+                // Handle error after the release
+                if (fetchError) {
+                  logger.error('Database query error:', fetchError);
+                  return res.status(500).json({
+                    status: 500,
+                    message: fetchError.message,
+                    data: {},
+                  });
+                }
+
+                // Send the fetched user data to the client
+                res.status(201).json({
+                  status: 201,
+                  message: 'User successfully registered.',
+                  data: fun.convertIsActiveToBoolean(fetchResults[0]), // assuming the query returns an array
+                });
+                connection.release();
+              }
+            );
+          }
+        });
       });
     });
   },
@@ -450,77 +450,32 @@ const userController = {
   updateUser: (req, res, next) => {
     let id = req.params.id;
     let userId = req.userId;
-    let {
-      firstName,
-      lastName,
-      emailAdress,
-      password,
-      phoneNumber,
-      isActive,
-      street,
-      city,
-    } = req.body;
-
-    dbconnection.getConnection(function (err, connection) {
+    const userToUpdate = req.body;
+    fun.hashPassword(password, function (err, hash) {
       if (err) {
-        logger.error('Database connection error:', err);
+        logger.error('Bcrypt hashing error:', err);
         return res.status(500).json({
           status: 500,
           message: err.message,
           data: {},
         });
       }
+      userToUpdate.password = hash;
+      dbconnection.getConnection(function (err, connection) {
+        if (err) {
+          logger.error('Database connection error:', err);
+          return res.status(500).json({
+            status: 500,
+            message: err.message,
+            data: {},
+          });
+        }
 
-      // Use the connection
-      connection.query(
-        'SELECT * FROM user WHERE id = ?',
-        [id],
-        function (error, results, fields) {
-          if (error) {
-            logger.error('Database query error:', error);
-            return res.status(500).json({
-              status: 500,
-              message: error.message,
-              data: {},
-            });
-          }
-
-          // Check if user exists
-          if (results.length === 0) {
-            return res.status(404).json({
-              status: 404,
-              message: 'User not found',
-              data: {},
-            });
-          }
-
-          // Check if user is updating their own profile
-          if (id != userId) {
-            return res.status(403).json({
-              status: 403,
-              message: 'You can only update your own profile',
-              data: {},
-            });
-          }
-
-          const sql = `
-          UPDATE user 
-          SET firstName = ?, lastName = ?, isActive = ?, emailAdress = ?, password = ?, phoneNumber = ?, street = ?, city = ?
-          WHERE id = ?
-          `;
-          const values = [
-            firstName,
-            lastName,
-            isActive,
-            emailAdress,
-            password,
-            phoneNumber,
-            street,
-            city,
-            id,
-          ];
-
-          connection.query(sql, values, function (error, results, fields) {
+        // Use the connection
+        connection.query(
+          'SELECT * FROM user WHERE id = ?',
+          [id],
+          function (error, results, fields) {
             if (error) {
               logger.error('Database query error:', error);
               return res.status(500).json({
@@ -530,26 +485,72 @@ const userController = {
               });
             }
 
-            // Get the updated user details
-            connection.query(
-              'SELECT * FROM user WHERE id = ?',
-              [id],
-              function (error, results, fields) {
-                if (error) throw error;
+            // Check if user exists
+            if (results.length === 0) {
+              return res.status(404).json({
+                status: 404,
+                message: 'User not found',
+                data: {},
+              });
+            }
 
-                // User was updated successfully
-                res.status(200).json({
-                  status: 200,
-                  message: `User successfully updated`,
-                  data: fun.convertIsActiveToBoolean(results[0]),
+            // Check if user is updating their own profile
+            if (id != userId) {
+              return res.status(403).json({
+                status: 403,
+                message: 'You can only update your own profile',
+                data: {},
+              });
+            }
+
+            const sql = `
+          UPDATE user 
+          SET firstName = ?, lastName = ?, isActive = ?, emailAdress = ?, password = ?, phoneNumber = ?, street = ?, city = ?
+          WHERE id = ?
+          `;
+            const values = [
+              userToUpdate.firstName,
+              userToUpdate.lastName,
+              userToUpdate.isActive,
+              userToUpdate.emailAdress,
+              userToUpdate.password,
+              userToUpdate.phoneNumber,
+              userToUpdate.street,
+              userToUpdate.city,
+              id,
+            ];
+
+            connection.query(sql, values, function (error, results, fields) {
+              if (error) {
+                logger.error('Database query error:', error);
+                return res.status(500).json({
+                  status: 500,
+                  message: error.message,
+                  data: {},
                 });
-
-                connection.release();
               }
-            );
-          });
-        }
-      );
+
+              // Get the updated user details
+              connection.query(
+                'SELECT * FROM user WHERE id = ?',
+                [id],
+                function (error, results, fields) {
+                  if (error) throw error;
+
+                  // User was updated successfully
+                  res.status(200).json({
+                    status: 200,
+                    message: `User successfully updated`,
+                    data: fun.convertIsActiveToBoolean(results[0]),
+                  });
+
+                  connection.release();
+                }
+              );
+            });
+          }
+        );
+      });
     });
   },
   // getUserProfile retrieves a user's profile information based on their email and password

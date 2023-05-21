@@ -11,6 +11,8 @@ Voor telefoonnummer:
 
 
 */
+const bcrypt = require('bcrypt');
+
 function validateEmail(email) {
   // const regex = /^[\w-]+(\.[\w-]+)*@([\w-]+\.)+[a-zA-Z]{2,7}$/;
   const regex = /^[a-z]{1,1}\.[a-z]{2,}@[a-z]{2,}\.[a-z]{2,3}$/i;
@@ -57,6 +59,11 @@ function convertMealProperties(meal) {
     price: parseFloat(meal.price),
   };
 }
+// Hashing function
+function hashPassword(password, callback) {
+  const saltRounds = 10;
+  bcrypt.hash(password, saltRounds, callback);
+}
 
 function getRandomEmail() {
   const randomString = Math.random().toString(36).substring(2, 7); // Genereert een willekeurige tekenreeks van 5 karakters
@@ -70,4 +77,5 @@ module.exports = {
   getRandomEmail: getRandomEmail,
   convertIsActiveToBoolean: convertIsActiveToBoolean,
   convertMealProperties: convertMealProperties,
+  hashPassword: hashPassword,
 };
