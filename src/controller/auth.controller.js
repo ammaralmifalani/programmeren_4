@@ -2,15 +2,14 @@ const jwt = require('jsonwebtoken');
 const dbconnection = require('../database/dbconnection');
 const { logger, jwtSecretKey } = require('../test/utils/utils');
 const fun = require('../controller/function');
+const bcrypt = require('bcrypt');
 
 const authController = {
   login(req, res, next) {
     logger.trace('login called');
-    // Log request method and body
     logger.debug(`Request Method: ${req.method}`);
     logger.debug(`Request Body: ${JSON.stringify(req.body)}`);
 
-    // Check if required fields are provided
     const credentials = {
       emailAdress: req.body.emailAdress,
       password: req.body.password,
@@ -42,9 +41,9 @@ const authController = {
         function (error, results, fields) {
           connection.release();
           logger.trace(
-            'connection query returned results from pool with email address and password from credentials '
+            'Connection query returned results from pool with email address and password from credentials'
           );
-          console.log('emailAdress: ' + emailAdress);
+          logger.debug('emailAdress: ' + emailAdress);
           if (error) {
             logger.error('Database query error:', error);
             return res.status(500).json({
@@ -56,47 +55,56 @@ const authController = {
             res
               .status(404)
               .json({ status: 404, message: 'User not found', data: {} });
-          } else if (results[0].password !== password) {
-            res
-              .status(401)
-              .json({ status: 401, message: 'Invalid password', data: {} });
           } else {
-            logger.debug('USER ID:', results[0].id);
-            logger.debug('Password matches, generating JWT...');
-            results[0] = fun.convertIsActiveToBoolean(results[0]);
-            const { password, ...userInfo } = results[0];
-            const payload = { userId: results[0].id };
-            jwt.sign(
-              payload,
-              jwtSecretKey,
-              { expiresIn: '2d' },
-              (err, token) => {
-                if (err) {
-                  logger.error('Error signing JWT:', err);
-                  return res.status(500).json({
-                    status: 500,
-                    message: err.message,
-                    data: {},
-                  });
-                }
-                if (token) {
-                  logger.info('JWT generated:', token);
-                  res.status(200).json({
-                    status: 200,
-                    message: 'Authentication successful!',
-                    data: {
-                      ...userInfo,
-                      token,
-                    },
-                  });
-                }
+            let user = results[0];
+            bcrypt.compare(password, user.password, function (err, result) {
+              if (result) {
+                const payload = {
+                  userId: user.id,
+                };
+                logger.debug('USER ID:', user.id);
+                logger.debug('Password matches, generating JWT...');
+                user = fun.convertIsActiveToBoolean(user);
+                const { password, ...userInfo } = user;
+
+                jwt.sign(
+                  payload,
+                  jwtSecretKey,
+                  { expiresIn: '2d' },
+                  (err, token) => {
+                    if (err) {
+                      logger.error('Error signing JWT:', err);
+                      return res.status(500).json({
+                        status: 500,
+                        message: err.message,
+                        data: {},
+                      });
+                    }
+                    if (token) {
+                      logger.info('JWT generated:', token);
+                      res.status(200).json({
+                        status: 200,
+                        message: 'Authentication successful!',
+                        data: {
+                          ...userInfo,
+                          token,
+                        },
+                      });
+                    }
+                  }
+                );
+              } else {
+                res
+                  .status(401)
+                  .json({ status: 401, message: 'Invalid password', data: {} });
               }
-            );
+            });
           }
         }
       );
     });
   },
+
   /**
    * Validatie functie voor /api/login,
    * valideert of de vereiste body aanwezig is.
