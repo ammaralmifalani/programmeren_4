@@ -1,7 +1,6 @@
 const dbconnection = require('../database/dbconnection');
 const logger = require('../test/utils/utils').logger;
 const fun = require('./function');
-
 // userController handles the routes for creating, updating, deleting, and retrieving user data
 const mealController = {
   validateMeal: (req, res, next) => {
@@ -16,7 +15,6 @@ const mealController = {
       'dateTime',
     ];
     const optionalFields = ['isActive', 'isVega', 'isVegan', 'isToTakeHome'];
-    const allergenesOptions = ['gluten', 'lactose', 'noten', '']; // Toegestane allergenes
     const fieldTypes = {
       name: 'string',
       description: 'string',
@@ -66,23 +64,6 @@ const mealController = {
         });
       }
     }
-
-    // Controleer of de waarde van allergenes binnen de toegestane set valt
-    if (meal['allergenes'] !== undefined) {
-      let allergenes = meal['allergenes'].split(',');
-      for (let allergene of allergenes) {
-        if (!allergenesOptions.includes(allergene)) {
-          return next({
-            status: 400,
-            message: `optional meal field allergenes must be one of ${allergenesOptions.join(
-              ', '
-            )}`,
-            data: {},
-          });
-        }
-      }
-    }
-
     next();
   },
   // getAllMeals retrieves all users from the database
@@ -237,7 +218,11 @@ const mealController = {
     meal.allergenes = meal.allergenes !== undefined ? meal.allergenes : '';
 
     logger.debug('Formatted Meal.dateTime: ', meal.dateTime);
-
+    logger.debug('UpdatedMeal.allergenes', meal.allergenes);
+    // If updatedMeal.allergenes is an array, join it into a string
+    if (Array.isArray(meal.allergenes)) {
+      meal.allergenes = meal.allergenes.join(',');
+    }
     let sqlInsertStatement =
       'INSERT INTO `meal` ( `name`, `description`, `imageUrl`, `dateTime`, `maxAmountOfParticipants`, `price`,`isActive`,`isVega`,`isVegan`,`isToTakeHome`,`allergenes`, `cookId`) VALUES' +
       '(?,?,?,?,?,?,?,?,?,?,?,?)';
@@ -468,12 +453,11 @@ const mealController = {
             ...results[0],
             ...req.body,
           };
-
+          logger.debug('UpdatedMeal.allergenes', updatedMeal.allergenes);
           // If updatedMeal.allergenes is an array, join it into a string
           if (Array.isArray(updatedMeal.allergenes)) {
             updatedMeal.allergenes = updatedMeal.allergenes.join(',');
           }
-
           const sql = `
             UPDATE meal
             SET name = ?, description = ?, isActive = ?, isVega = ?, isVegan = ?, isToTakeHome = ?, dateTime = ?, maxAmountOfParticipants = ?, price = ?, imageUrl = ?, allergenes = ?
@@ -493,6 +477,7 @@ const mealController = {
             updatedMeal.allergenes,
             mealId,
           ];
+
           logger.debug(
             'Updating meal with allergenes:',
             updatedMeal.allergenes
